@@ -25,8 +25,12 @@
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
       
-      $id = $this -> _lib -> createCategory($body['categoryName']);
-      return [ 'categoryId' => $id ];
+      $id = $this -> _lib -> createCategory($body['category_name']);
+      return [
+        'code' => 0,
+        'success' => 'success',
+	'category_id' => $id 
+      ];
     }
 
     private function _handleGetCategoryList(){
