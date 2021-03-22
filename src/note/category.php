@@ -16,6 +16,8 @@
           return $this -> _handleCreateCategory();
         case 'GET':
           return $this -> _handleGetCategoryList();
+        case 'DELETE':
+          return $this -> _handleDeleteCategory();
         default:
           throw new Exception('请求方法不允许', 405);
       }
@@ -41,6 +43,17 @@
         'data' => [
 	  'category_list' => $categoryList,
         ],
+      ];
+    }
+
+    private function _handledeleteCategory(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      $this -> _lib -> deleteCategory($body['category_id']);
+      return [
+        'code' => 0,
+        'success' => 'success'
       ];
     }
   }

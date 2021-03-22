@@ -23,6 +23,13 @@
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
       return $result;
     }
+
+    public function deleteCategory($categoryId){
+      $sql = 'DELETE FROM `note_category` WHERE category_id=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> execute();
+    }
   }
 
   return new CategoryLib($pdo);
