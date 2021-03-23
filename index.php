@@ -1,4 +1,5 @@
 <?php
+  require './src/ErrorCode.php';
   $pdo = require './lib/db.php';
   $category = require './src/note/category.php';
 
@@ -44,7 +45,8 @@
       }
     }
 
-    private function _json($array, $code = 0){
+    private function _json($array){
+      $code = $array['code'];
       if($code > 0 && $code < 2000 && $code != 200 && $code != 204){
         header('HTTP/1.1 ' . $code . ' ' . $this -> _statusCode[$code]);
       }
@@ -61,7 +63,7 @@
           $this -> _json($this -> _category -> handleCategory());
         }
       }catch(Exception $e){
-        $this -> _json(['error' => $e -> getMessage()], $e -> getCode());
+        $this -> _json(['message' => $e -> getMessage(), 'code' => $e -> getCode()]);
       }
     } 
   }

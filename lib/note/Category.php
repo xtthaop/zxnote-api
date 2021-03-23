@@ -30,6 +30,14 @@
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
     }
+
+    public function updateCategory($categoryId, $categoryName){
+      $sql = 'UPDATE `note_category` SET category_name=:category_name  WHERE category_id=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> bindParam(':category_name', $categoryName);
+      $stml -> execute();
+    }
   }
 
   return new CategoryLib($pdo);
