@@ -1,12 +1,12 @@
 <?php
-  $lib = require './lib/note/Category.php';
-  
   class Category{
 
-    private $_lib;
+    private $_categoryLib;
+    private $_noteLib;
 
-    public function __construct(CategoryLib $lib){
-      $this -> _lib = $lib;
+    public function __construct(CategoryLib $categoryLib, NoteLib $noteLib){
+      $this -> _categoryLib = $categoryLib;
+      $this -> _noteLib = $noteLib;
     } 
 
     public function handleCategory(){
@@ -21,7 +21,7 @@
         case 'PUT':
 	  return $this -> _handleUpdateCategory();
         default:
-          throw new Exception('请求方法不允许', 405);
+          throw new Exception('请求方法不被允许', 405);
       }
     }
 
@@ -33,10 +33,10 @@
         throw new Exception('请输入分类名称', ErrorCode::NO_CATEGORY_NAME);
       }
 
-      $id = $this -> _lib -> createCategory($body['category_name']);
+      $id = $this -> _categoryLib -> createCategory($body['category_name']);
       return [
         'code' => 0,
-        'success' => 'success',
+        'message' => 'success',
         'data' => [
           'category_id' => intval($id),
         ]
@@ -44,7 +44,7 @@
     }
 
     private function _handleGetCategoryList(){
-      $categoryList = $this -> _lib -> getCategoryList();
+      $categoryList = $this -> _categoryLib -> getCategoryList();
       return [
         'code' => 0,
         'message' => 'success',
@@ -62,10 +62,11 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $this -> _lib -> deleteCategory($body['category_id']);
+      $this -> _categoryLib -> deleteCategory($body['category_id']);
+      $this -> _noteLib -> deleteCategoryAllNote($body['category_id']);
       return [
         'code' => 0,
-        'success' => 'success'
+        'message' => 'success'
       ];
     }
 
@@ -81,12 +82,11 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
      
-      $this -> _lib -> updateCategory($body['category_id'], $body['category_name']);
+      $this -> _categoryLib -> updateCategory($body['category_id'], $body['category_name']);
       return [
         'code' => 0,
-        'success' => 'success'
+        'message' => 'success'
       ];
     }
   }
 
-  return new Category($lib);

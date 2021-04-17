@@ -1,16 +1,22 @@
 <?php
   require './src/ErrorCode.php';
   $pdo = require './lib/db.php';
-  $category = require './src/note/category.php';
+
+  require './src/note/category.php';
+  require './src/note/note.php';
+
+  require './lib/note/Category.php';
+  require './lib/note/Note.php';
 
   class Restful{
     private $_category;
+    private $_note;
 
     private $_requestMethod;
 
     private $_resourceName;
 
-    private $_allowResource = ['category'];
+    private $_allowResource = ['category', 'note'];
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
@@ -25,8 +31,9 @@
       500 => 'Server Internal Error'
     ];
 
-    public function __construct(Category $category){
+    public function __construct(Category $category, Note $note){
       $this -> _category = $category;
+      $this -> _note = $note;
     }
 
     private function _setupRequestMethod(){
@@ -62,12 +69,21 @@
         if($this -> _resourceName == 'category'){
           $this -> _json($this -> _category -> handleCategory());
         }
+        if($this -> _resourceName == 'note'){
+          $this -> _json($this -> _note -> handleNote());
+        }
       }catch(Exception $e){
         $this -> _json(['message' => $e -> getMessage(), 'code' => $e -> getCode()]);
       }
     } 
   }
 
-  $restful = new Restful($category);
+  $categoryLib = new CategoryLib($pdo);
+  $noteLib = new NoteLib($pdo);
+
+  $category = new Category($categoryLib, $noteLib);
+  $note = new Note($noteLib);
+
+  $restful = new Restful($category, $note);
   $restful -> run();
 

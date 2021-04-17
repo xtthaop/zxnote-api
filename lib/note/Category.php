@@ -1,6 +1,6 @@
 <?php
 
-  class CategoryLib{
+  class CategoryLib {
 
     private $_db;
 
@@ -40,5 +40,4 @@
     }
   }
 
-  return new CategoryLib($pdo);
 
