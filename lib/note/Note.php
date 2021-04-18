@@ -17,7 +17,7 @@
     }
 
     public function getAllNote(){
-      $sql = 'SELECT * from `note`';
+      $sql = 'SELECT * FROM `note`';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
@@ -25,7 +25,7 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT * from `note` WHERE `category_id`=:category_id';
+      $sql = 'SELECT `note_id`, `note_title`, `create_time` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
