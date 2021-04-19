@@ -27,6 +27,8 @@
               return $this -> _getAllNote();
             case 'get_category_note':
               return $this -> _getCategoryNote();
+            case 'get_note_content':
+              return $this -> _getNoteContent();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -90,13 +92,13 @@
     }
 
     private function _getCategoryNote(){
-      $data = $_GET;
+      $params = $_GET;
 
-      if(!$data['category_id']){
+      if(!$params['category_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $categoryNote = $this -> _noteLib -> getCategoryNote($data['category_id']);
+      $categoryNote = $this -> _noteLib -> getCategoryNote($params['category_id']);
       return [
         'code' => 0,
         'message' => 'success',
@@ -118,6 +120,21 @@
       return [
         'code' => 0,
         'message' => 'success'
+      ];
+    }
+
+    private function _getNoteContent(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $content = $this -> _noteLib -> getNoteContent($params['note_id']);
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'content' => $content
       ];
     }
   }

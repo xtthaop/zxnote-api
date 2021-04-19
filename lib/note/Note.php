@@ -54,5 +54,14 @@
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
     }
+
+    public function getNoteContent($noteId){
+      $sql = 'SELECT `note_content` FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $content = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $content;
+    }
   }
 
