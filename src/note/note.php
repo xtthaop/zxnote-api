@@ -13,7 +13,14 @@
       $params = explode('/', $path);
       switch($requestMethod){
         case 'POST':
-          return $this -> _handleCreateNote();
+          switch($params[2]){
+            case 'create_note':
+              return $this -> _handleCreateNote();
+            case 'move_note':
+              return $this -> _handleMoveNote();
+            default:
+              throw new Exception('请求的资源不存在', 404); 
+          }
         case 'GET':
           switch($params[2]){
             case 'get_all_note':
@@ -21,7 +28,7 @@
             case 'get_category_note':
               return $this -> _getCategoryNote();
             default:
-              throw new Exception('请求资源不存在', 404);
+              throw new Exception('请求的资源不存在', 404);
           }
         case 'DELETE':
           return $this -> _handleDeleteNote();
@@ -49,6 +56,25 @@
         'data' => [
           'note_id' => intval($id),
         ]
+      ];
+    }
+     
+    private function _handleMoveNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['category_id']){
+        throw new Exception('请选择分类', ErrorCode::NO_CATEGORY_ID);
+      } 
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> moveNote($body['category_id'], $body['note_id']);
+      return [
+        'code' => 0,
+        'message' => 'success'
       ];
     }
 

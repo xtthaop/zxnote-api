@@ -46,5 +46,13 @@
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
     }
+
+    public function moveNote($categoryId, $noteId){
+      $sql = 'UPDATE `note` SET `category_id`=:category_id WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+    }
   }
 
