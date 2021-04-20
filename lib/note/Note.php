@@ -63,5 +63,14 @@
       $content = $stml -> fetch(PDO::FETCH_ASSOC);
       return $content;
     }
+
+    public function saveNote($noteId, $noteTitle, $noteContent){
+      $sql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> bindParam(':note_title', $noteTitle);
+      $stml -> bindParam(':note_content', $noteContent);
+      $stml -> execute();
+    }
   }
 

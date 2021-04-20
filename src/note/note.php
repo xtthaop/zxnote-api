@@ -18,6 +18,8 @@
               return $this -> _handleCreateNote();
             case 'move_note':
               return $this -> _handleMoveNote();
+            case 'save_note':
+              return $this -> _handleSaveNote();
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
@@ -134,7 +136,22 @@
       return [
         'code' => 0,
         'message' => 'success',
-        'content' => $content
+        'data' => $content
+      ];
+    }
+
+    private function _handleSaveNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> saveNote($body['note_id'], $body['note_title'], $body['note_content']);
+      return [
+        'code' => 0,
+        'message' => 'success'
       ];
     }
   }
