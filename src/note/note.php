@@ -55,7 +55,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($params['category_id']);
+      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($body['category_id']);
 
       if(!$isCategoryExist){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
