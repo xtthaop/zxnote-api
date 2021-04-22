@@ -2,9 +2,11 @@
   class Note {
 
     private $_noteLib;
+    private $_categoryLib;
 
-    public function __construct(NoteLib $noteLib){
+    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib){
       $this -> _noteLib = $noteLib;
+      $this -> _categoryLib = $categoryLib;
     }
 
     public function handleNote(){
@@ -51,6 +53,12 @@
 
       if(!$body['category_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($params['category_id']);
+
+      if(!$isCategoryExist){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
       
       $id = $this -> _noteLib -> createNote($body['note_title'], $body['category_id']);
@@ -99,8 +107,15 @@
       if(!$params['category_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
+      
+      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($params['category_id']);
+
+      if(!$isCategoryExist){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
 
       $categoryNote = $this -> _noteLib -> getCategoryNote($params['category_id']);
+     
       return [
         'code' => 0,
         'message' => 'success',
@@ -133,6 +148,11 @@
       }
 
       $content = $this -> _noteLib -> getNoteContent($params['note_id']);
+
+      if(!$content){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
       return [
         'code' => 0,
         'message' => 'success',

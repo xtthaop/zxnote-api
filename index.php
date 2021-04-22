@@ -82,7 +82,7 @@
   $noteLib = new NoteLib($pdo);
 
   $category = new Category($categoryLib, $noteLib);
-  $note = new Note($noteLib);
+  $note = new Note($noteLib, $categoryLib);
 
   $restful = new Restful($category, $note);
   $restful -> run();

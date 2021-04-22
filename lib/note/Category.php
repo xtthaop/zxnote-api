@@ -38,6 +38,15 @@
       $stml -> bindParam(':category_name', $categoryName);
       $stml -> execute();
     }
+
+    public function getCategoryInfo($categoryId){
+      $sql = 'SELECT * FROM `note_category` WHERE `category_id`=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> execute();
+      $result = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $result;
+    }
   }
 
 
