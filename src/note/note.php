@@ -22,6 +22,8 @@
               return $this -> _handleMoveNote();
             case 'save_note':
               return $this -> _handleSaveNote();
+            case 'release_note':
+              return $this -> _handleReleaseNote();
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
@@ -41,6 +43,25 @@
         default:
           throw new Exception('请求方法不被允许', 405);
       }
+    }
+
+    private function _handleReleaseNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['release_status'] && $body['release_status'] != 0){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+      
+      $this -> _noteLib -> releaseNote($body['note_id'], $body['release_status']);
+      return [
+        'code' => 0,
+        'message' => 'success',
+      ];  
     }
 
     private function _handleCreateNote(){

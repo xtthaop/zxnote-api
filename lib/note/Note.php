@@ -7,6 +7,14 @@
       $this -> _db = $db;
     }
 
+    public function releaseNote($noteId, $status){
+      $sql = 'UPDATE `note` SET `release_status`=:release_status WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':release_status', $status);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+    }
+
     public function createNote($title, $categoryId){
       $sql = 'INSERT INTO `note` (`note_title`, `category_id`) VALUES (:note_title, :category_id)';
       $stml = $this -> _db -> prepare($sql);
@@ -25,7 +33,7 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT `note_id`, `note_title`, `create_time` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `release_status` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
