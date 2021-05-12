@@ -5,4 +5,5 @@
     const NO_NOTE_TITLE = 4003; // 笔记标题不存在
     const NO_CATEGORY_ID = 4004; // 分类ID不存在
     const RECORD_NOT_FOUND = 4005; // 记录不存在
+    const UPLOAD_FILE_FAILED = 4006; // 上传文件失败
   }
