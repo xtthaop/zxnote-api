@@ -5,20 +5,24 @@
   require './src/note/category.php';
   require './src/note/note.php';
   require './src/upload.php';
+  require './src/permission.php';
 
   require './lib/note/Category.php';
   require './lib/note/Note.php';
+  
+  require './utils/captcha.php';
 
   class Restful{
     private $_category;
     private $_note;
     private $_upload;
+    private $_permission;
 
     private $_requestMethod;
 
     private $_resourceName;
 
-    private $_allowResource = ['category', 'note', 'upload'];
+    private $_allowResource = ['category', 'note', 'upload', 'permission'];
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
@@ -33,10 +37,11 @@
       500 => 'Server Internal Error'
     ];
 
-    public function __construct(Category $category, Note $note, Upload $upload){
+    public function __construct(Category $category, Note $note, Upload $upload, Permission $permission){
       $this -> _category = $category;
       $this -> _note = $note;
       $this -> _upload = $upload;
+      $this -> _permission = $permission;
     }
 
     private function _setupRequestMethod(){
@@ -78,19 +83,25 @@
         if($this -> _resourceName == 'upload'){
           $this -> _json($this -> _upload -> handleUpload());
         }
+        if($this -> _resourceName === 'permission'){
+          $this -> _json($this -> _permission -> handlePermission());
+        }
       }catch(Exception $e){
         $this -> _json(['message' => $e -> getMessage(), 'code' => $e -> getCode()]);
       }
     } 
   }
 
+  $captcha = new Captcha();
+
   $categoryLib = new CategoryLib($pdo);
   $noteLib = new NoteLib($pdo);
   $upload = new Upload();
+  $permission = new Permission($captcha);
 
   $category = new Category($categoryLib, $noteLib);
   $note = new Note($noteLib, $categoryLib);
 
-  $restful = new Restful($category, $note, $upload);
+  $restful = new Restful($category, $note, $upload, $permission);
   $restful -> run();
 
