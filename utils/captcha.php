@@ -4,9 +4,9 @@ Class Captcha {
   
   private function _makeJigsaw(){
     $jigsawArray = array();
-    $pic_w = 50;
-    $pic_h = 50;
-    $r = 10;
+    $pic_w = 40;
+    $pic_h = 40;
+    $r = 8;
     $dr = $r * $r;
 
     $circular1_x = ($pic_w - $r)/2;
@@ -47,7 +47,7 @@ Class Captcha {
 
     $srcFile = './assets/images/captcha/bp' . mt_rand(1, 3) . '.jpeg';
     $src_w = 320;
-    $src_h = 170;
+    $src_h = 140;
     $src_im = imagecreatefromjpeg($srcFile);
 
     $dst_im = imagecreatetruecolor($src_w, $src_h);
@@ -84,8 +84,8 @@ Class Captcha {
     return [
       'y' => $src_y,
       'x' => $src_x,
-      'dstImg' => 'https://zxctb.top/restful/public/captcha/dst.png?' .  (int)(microtime(true)*1000),
-      'jigsawImg' => 'https://zxctb.top/restful/public/captcha/jigsaw.png?' . (int)(microtime(true)*1000),
+      'dst_img' => 'https://zxctb.top/restful/public/captcha/dst.png?' .  (int)(microtime(true)*1000),
+      'jigsaw_img' => 'https://zxctb.top/restful/public/captcha/jigsaw.png?' . (int)(microtime(true)*1000),
     ];
   }
 }

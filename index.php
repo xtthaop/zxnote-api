@@ -1,4 +1,5 @@
 <?php
+  session_start();
   require './src/ErrorCode.php';
   $pdo = require './lib/db.php';
 
@@ -9,8 +10,10 @@
 
   require './lib/note/Category.php';
   require './lib/note/Note.php';
+  require './lib/Permission.php';
   
   require './utils/captcha.php';
+  require './utils/jwt.php';
 
   class Restful{
     private $_category;
@@ -93,12 +96,14 @@
   }
 
   $captcha = new Captcha();
+  $jwt = new JwtAuth();
 
   $categoryLib = new CategoryLib($pdo);
   $noteLib = new NoteLib($pdo);
-  $upload = new Upload();
-  $permission = new Permission($captcha);
+  $permissionLib = new PermissionLib($pdo);
 
+  $upload = new Upload();
+  $permission = new Permission($permissionLib, $captcha, $jwt);
   $category = new Category($categoryLib, $noteLib);
   $note = new Note($noteLib, $categoryLib);
 
