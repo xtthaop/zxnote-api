@@ -83,7 +83,7 @@ class Permission {
         "exp" => time() + $lifeTime,
         "jti" => md5(uniqid('JWT').time()),
         "uid" => $res['user_id'],
-        "unm" => $res['user_name'],
+        "unm" => $res['username'],
       ];
 
       $token = $this -> _jwt -> getToken($payload);
