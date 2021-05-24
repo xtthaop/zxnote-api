@@ -15,11 +15,14 @@
   require './utils/captcha.php';
   require './utils/jwt.php';
 
+  global $gUserId;
+
   class Restful{
     private $_category;
     private $_note;
     private $_upload;
     private $_permission;
+    private $_jwt;
 
     private $_requestMethod;
 
@@ -28,6 +31,8 @@
     private $_allowResource = ['category', 'note', 'upload', 'permission'];
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
+
+    private $_permissionWhiteList = ['permission/login'];
 
     private $_statusCode = [
       200 => 'OK',
@@ -40,11 +45,12 @@
       500 => 'Server Internal Error'
     ];
 
-    public function __construct(Category $category, Note $note, Upload $upload, Permission $permission){
+    public function __construct(Category $category, Note $note, Upload $upload, Permission $permission, JwtAuth $jwt){
       $this -> _category = $category;
       $this -> _note = $note;
       $this -> _upload = $upload;
       $this -> _permission = $permission;
+      $this -> _jwt = $jwt;
     }
 
     private function _setupRequestMethod(){
@@ -63,6 +69,28 @@
       }
     }
 
+    private function _verifyToken(){
+      $path = $_SERVER['PATH_INFO'];
+
+      if(empty($_SERVER['HTTP_X_TOKEN'])){
+        $this -> _checkPermissionWhiteList();
+      }
+
+      $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN']);
+
+      if($res){
+        $gUserId = $res['uid'];
+      }else{
+        $this -> _checkPermissionWhiteList();
+      }
+    }
+
+    private function _checkPermissionWhiteList(){
+      if(!in_array($path, $this -> _permissionWhiteList)){
+        throw new Exception("权限验证失败，请登录", 401);
+      }
+    }
+
     private function _json($array){
       $code = $array['code'];
       if($code > 0 && $code < 2000 && $code != 200 && $code != 204){
@@ -77,6 +105,7 @@
       try{
         $this -> _setupRequestMethod();
         $this -> _setupResource();
+        $this -> _verifyToken();
         if($this -> _resourceName == 'category'){
           $this -> _json($this -> _category -> handleCategory());
         }
@@ -107,6 +136,6 @@
   $category = new Category($categoryLib, $noteLib);
   $note = new Note($noteLib, $categoryLib);
 
-  $restful = new Restful($category, $note, $upload, $permission);
+  $restful = new Restful($category, $note, $upload, $permission, $jwt);
   $restful -> run();
 

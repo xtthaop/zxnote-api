@@ -21,6 +21,8 @@ class Permission {
         switch($params[2]){
           case 'get_captcha':
             return $this -> _handleGetCaptcha();
+          case 'get_user_info':
+            return $this -> _handleGetUserInfo();
           default:
             throw new Exception('请求的资源不存在', 404);
         }
@@ -102,5 +104,19 @@ class Permission {
 
   private function _md5($string, $key = 'ZxNo@te!19@96#'){
     return md5($string . $key);
+  }
+
+  private function _handleGetUserInfo(){
+    if(!$userId){
+      throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+    }
+
+    $res = $this -> _permission -> getUserInfo($userId);
+
+    return [
+      'code' => 0,
+      'message' => 'success',
+      'data' => $res,
+    ];
   }
 } 
