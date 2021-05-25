@@ -107,16 +107,20 @@ class Permission {
   }
 
   private function _handleGetUserInfo(){
-    if(!$userId){
+    global $gUserId;
+    
+    if(!$gUserId){
       throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
     }
 
-    $res = $this -> _permission -> getUserInfo($userId);
+    $res = $this -> _permission -> getUserInfo($gUserId);
 
     return [
       'code' => 0,
       'message' => 'success',
-      'data' => $res,
+      'data' => [
+        'username' => $res['username'],
+      ]
     ];
   }
 } 

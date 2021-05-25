@@ -52,7 +52,7 @@ class JwtAuth {
     if(isset($payload['nbf']) && $payload['nbf'] > time()){
       return false;
     }
-
+    
     return $payload;
   }
 

@@ -15,7 +15,7 @@
   require './utils/captcha.php';
   require './utils/jwt.php';
 
-  global $gUserId;
+  $gUserId;
 
   class Restful{
     private $_category;
@@ -70,6 +70,8 @@
     }
 
     private function _verifyToken(){
+      global $gUserId;
+
       if(empty($_SERVER['HTTP_X_TOKEN'])){
         $this -> _checkPermissionWhiteList();
       }else{
