@@ -32,7 +32,7 @@
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
-    private $_permissionWhiteList = ['permission/login'];
+    private $_permissionWhiteList = ['/permission/login', '/permission/get_captcha'];
 
     private $_statusCode = [
       200 => 'OK',
@@ -70,13 +70,11 @@
     }
 
     private function _verifyToken(){
-      $path = $_SERVER['PATH_INFO'];
-
       if(empty($_SERVER['HTTP_X_TOKEN'])){
         $this -> _checkPermissionWhiteList();
       }
 
-      $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN']);
+      $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN'] || '');
 
       if($res){
         $gUserId = $res['uid'];
@@ -86,6 +84,7 @@
     }
 
     private function _checkPermissionWhiteList(){
+      $path = $_SERVER['PATH_INFO'];
       if(!in_array($path, $this -> _permissionWhiteList)){
         throw new Exception("权限验证失败，请登录", 401);
       }
