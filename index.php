@@ -72,14 +72,14 @@
     private function _verifyToken(){
       if(empty($_SERVER['HTTP_X_TOKEN'])){
         $this -> _checkPermissionWhiteList();
-      }
-
-      $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN'] || '');
-
-      if($res){
-        $gUserId = $res['uid'];
       }else{
-        $this -> _checkPermissionWhiteList();
+        $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN']);
+
+        if($res){
+          $gUserId = $res['uid'];
+        }else{
+          $this -> _checkPermissionWhiteList();
+        }
       }
     }
 
