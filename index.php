@@ -32,7 +32,7 @@
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
-    private $_permissionWhiteList = ['/permission/login', '/permission/get_captcha'];
+    private $_permissionWhiteList = ['/permission/login', '/permission/get_captcha', '/note/get_published_note_list'];
 
     private $_statusCode = [
       200 => 'OK',

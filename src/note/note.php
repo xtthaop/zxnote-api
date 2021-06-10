@@ -22,19 +22,19 @@
               return $this -> _handleMoveNote();
             case 'save_note':
               return $this -> _handleSaveNote();
-            case 'release_note':
-              return $this -> _handleReleaseNote();
+            case 'publish_note':
+              return $this -> _handlePublishNote();
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
         case 'GET':
           switch($params[2]){
-            case 'get_all_note':
-              return $this -> _getAllNote();
+            case 'get_published_note_list':
+              return $this -> _handleGetPublishedNoteList();
             case 'get_category_note':
-              return $this -> _getCategoryNote();
+              return $this -> _handleGetCategoryNote();
             case 'get_note_content':
-              return $this -> _getNoteContent();
+              return $this -> _handleGetNoteContent();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -45,11 +45,11 @@
       }
     }
 
-    private function _handleReleaseNote(){
+    private function _handlePublishNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
 
-      if(!$body['release_status'] && $body['release_status'] != 0){
+      if(!$body['publish_status'] && $body['publish_status'] != 0){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
@@ -57,7 +57,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
       
-      $this -> _noteLib -> releaseNote($body['note_id'], $body['release_status']);
+      $this -> _noteLib -> publishNote($body['note_id'], $body['publish_status']);
       return [
         'code' => 0,
         'message' => 'success',
@@ -111,18 +111,18 @@
       ];
     }
 
-    private function _getAllNote(){
-      $allNote = $this -> _noteLib -> getAllNote();
+    private function _handleGetPublishedNoteList(){
+      $noteList = $this -> _noteLib -> getPublishedNoteList();
       return [
         'code' => 0,
         'message' => 'success',
         'data' => [
-          'all_note_list' => $allNote,
+          'note_list' => $noteList,
         ],
       ];
     }
 
-    private function _getCategoryNote(){
+    private function _handleGetCategoryNote(){
       $params = $_GET;
 
       if(!$params['category_id']){
@@ -161,7 +161,7 @@
       ];
     }
 
-    private function _getNoteContent(){
+    private function _handleGetNoteContent(){
       $params = $_GET;
 
       if(!$params['note_id']){

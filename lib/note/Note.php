@@ -7,10 +7,10 @@
       $this -> _db = $db;
     }
 
-    public function releaseNote($noteId, $status){
-      $sql = 'UPDATE `note` SET `release_status`=:release_status WHERE `note_id`=:note_id';
+    public function publishNote($noteId, $status){
+      $sql = 'UPDATE `note` SET `publish_status`=:publish_status WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':release_status', $status);
+      $stml -> bindParam(':publish_status', $status);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
     }
@@ -24,8 +24,8 @@
       return $this -> _db -> lastInsertId();
     }
 
-    public function getAllNote(){
-      $sql = 'SELECT * FROM `note`';
+    public function getPublishedNoteList(){
+      $sql = 'SELECT * FROM `note` where `publish_status`=1';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
@@ -33,7 +33,7 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `release_status` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `publish_status` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
