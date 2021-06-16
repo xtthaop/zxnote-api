@@ -35,6 +35,8 @@
               return $this -> _handleGetCategoryNote();
             case 'get_note_content':
               return $this -> _handleGetNoteContent();
+            case 'get_note':
+              return $this -> _handleGetNote();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -178,6 +180,26 @@
         'code' => 0,
         'message' => 'success',
         'data' => $content
+      ];
+    }
+
+    private function _handleGetNote(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+      
+      $res = $this -> _noteLib -> getNote($params['note_id']);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $res
       ];
     }
 

@@ -72,6 +72,15 @@
       return $content;
     }
 
+    public function getNote($noteId){
+      $sql = 'SELECT * FROM `note` WHERE `note_id`=:note_id AND `publish_status`=1';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
+    }
+
     public function saveNote($noteId, $noteTitle, $noteContent){
       $sql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($sql);
