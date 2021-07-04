@@ -3,10 +3,12 @@
 
     private $_noteLib;
     private $_categoryLib;
+    private $_wxsdk;
 
-    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib){
+    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib, WXSDK $wxsdk){
       $this -> _noteLib = $noteLib;
       $this -> _categoryLib = $categoryLib;
+      $this -> _wxsdk = $wxsdk;
     }
 
     public function handleNote(){
@@ -37,6 +39,8 @@
               return $this -> _handleGetNoteContent();
             case 'get_note':
               return $this -> _handleGetNote();
+            case 'get_wx_config':
+              return $this -> _handleGetWxConfig();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -216,6 +220,16 @@
         'code' => 0,
         'message' => 'success'
       ];
+    }
+
+    private function _handleGetWxConfig(){
+      $params = $_GET;
+      $signPackage = $this -> _wxsdk -> getSignPackage($params['url']);
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $signPackage,
+      ]; 
     }
   }
 

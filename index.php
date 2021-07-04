@@ -14,6 +14,7 @@
   
   require './utils/captcha.php';
   require './utils/jwt.php';
+  require './utils/wxsdk.php';
 
   $gUserId;
 
@@ -32,7 +33,13 @@
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
-    private $_permissionWhiteList = ['/permission/login', '/permission/get_captcha', '/note/get_published_note_list', '/note/get_note'];
+    private $_permissionWhiteList = [
+      '/permission/login', 
+      '/permission/get_captcha', 
+      '/note/get_published_note_list', 
+      '/note/get_note', 
+      '/note/get_wx_config',
+    ];
 
     private $_statusCode = [
       200 => 'OK',
@@ -128,6 +135,10 @@
   $captcha = new Captcha();
   $jwt = new JwtAuth();
 
+  $wxAppId = 'wx9dd2acc63e6647f7';
+  $wxAppSecret = '409859a0db59e7522179734ddc4feed2';
+  $wxsdk = new WXSDK($wxAppId, $wxAppSecret);
+
   $categoryLib = new CategoryLib($pdo);
   $noteLib = new NoteLib($pdo);
   $permissionLib = new PermissionLib($pdo);
@@ -135,7 +146,7 @@
   $upload = new Upload();
   $permission = new Permission($permissionLib, $captcha, $jwt);
   $category = new Category($categoryLib, $noteLib);
-  $note = new Note($noteLib, $categoryLib);
+  $note = new Note($noteLib, $categoryLib, $wxsdk);
 
   $restful = new Restful($category, $note, $upload, $permission, $jwt);
   $restful -> run();

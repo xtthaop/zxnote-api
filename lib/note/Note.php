@@ -25,7 +25,7 @@
     }
 
     public function getPublishedNoteList(){
-      $sql = 'SELECT * FROM `note` where `publish_status`=1';
+      $sql = 'SELECT * FROM `note` where `publish_status`=1 ORDER BY create_time DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
