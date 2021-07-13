@@ -63,7 +63,7 @@
     private function _setupRequestMethod(){
       $this -> _requestMethod = $_SERVER['REQUEST_METHOD'];
       if(!in_array($this -> _requestMethod, $this -> _allowRequestMethod)){
-        throw new Exception('请求方法不允许', '405');
+        throw new Exception('请求方法不被允许', '405');
       }
     }
 
@@ -72,7 +72,7 @@
       $params = explode('/', $path);
       $this -> _resourceName = $params[1];
       if(!in_array($this -> _resourceName, $this -> _allowResource)){
-        throw new Exception('请求资源不允许', '400');
+        throw new Exception('请求的资源不存在', '400');
       }
     }
 
