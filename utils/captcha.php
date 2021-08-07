@@ -84,8 +84,8 @@ Class Captcha {
     return [
       'y' => $src_y,
       'x' => $src_x,
-      'dst_img' => 'https://zxctb.top/restful/public/captcha/dst.png?' .  (int)(microtime(true)*1000),
-      'jigsaw_img' => 'https://zxctb.top/restful/public/captcha/jigsaw.png?' . (int)(microtime(true)*1000),
+      'dst_img' => '/restful/public/captcha/dst.png?' .  (int)(microtime(true)*1000),
+      'jigsaw_img' => '/restful/public/captcha/jigsaw.png?' . (int)(microtime(true)*1000),
     ];
   }
 }

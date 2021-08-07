@@ -8,11 +8,38 @@
     }
 
     public function publishNote($noteId, $status){
-      $sql = 'UPDATE `note` SET `publish_status`=:publish_status WHERE `note_id`=:note_id';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':publish_status', $status);
+      $currentTime = date('Y:m:d H:m:s');
+      $null = null;
+
+      $selectSql = 'SELECT `publish_status` FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($selectSql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
+      $publishStatus = $stml -> fetch()[0];
+
+      $arr = array();
+      $updateSql = 'UPDATE `note` SET `publish_note_title`=`note_title`, `publish_note_content`=`note_content`, 
+                   `publish_status`=:publish_status, `publish_update_status`=:publish_update_status,';
+      $arr[':publish_status'] = $status;
+      $arr[':publish_update_status'] = $status;
+
+      if($status){
+        if($publishStatus){
+          $updateSql .= ' `publish_update_time`=:current_time';
+        }else{
+          $updateSql .= ' `publish_time`=:current_time';
+        }
+        $arr[':current_time'] = $currentTime;
+      }else{
+        $updateSql .= ' `publish_update_time`=:update_null_time, `publish_time`=:publish_null_time';
+        $arr[':update_null_time'] = $null;
+        $arr[':publish_null_time'] = $null;
+      }
+
+      $updateSql .= ' WHERE `note_id`=:note_id';
+      $arr[':note_id'] = $noteId;
+      $stml = $this -> _db -> prepare($updateSql);
+      $stml -> execute($arr);
     }
 
     public function createNote($title, $categoryId){
@@ -33,7 +60,8 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `publish_status` FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `publish_status`, `publish_update_status` 
+              FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
@@ -82,7 +110,8 @@
     }
 
     public function saveNote($noteId, $noteTitle, $noteContent){
-      $sql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content WHERE `note_id`=:note_id';
+      $sql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content, 
+             `publish_update_status`=0 WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> bindParam(':note_title', $noteTitle);
