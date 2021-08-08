@@ -52,7 +52,8 @@
     }
 
     public function getPublishedNoteList(){
-      $sql = 'SELECT * FROM `note` where `publish_status`=1 ORDER BY create_time DESC';
+      $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
+             `publish_update_time` FROM `note` where `publish_status`=1 ORDER BY publish_time DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
@@ -101,7 +102,8 @@
     }
 
     public function getNote($noteId){
-      $sql = 'SELECT * FROM `note` WHERE `note_id`=:note_id AND `publish_status`=1';
+      $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
+             `publish_update_time` FROM `note` WHERE `note_id`=:note_id AND `publish_status`=1';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
