@@ -1,5 +1,6 @@
 <?php
   session_start();
+  date_default_timezone_set('PRC');
   require './src/ErrorCode.php';
   $pdo = require './lib/db.php';
 
