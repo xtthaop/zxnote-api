@@ -53,8 +53,8 @@ class Permission {
     $raw = file_get_contents('php://input');
     $body = json_decode($raw, true);
     
-    $xMax = $_SESSION['captcha_x'] + 2;
-    $xMin = $_SESSION['captcha_x'] - 2;
+    $xMax = $_SESSION['captcha_x'] + 6;
+    $xMin = $_SESSION['captcha_x'] - 6;
     
     if(!$body['x'] && $body['x'] != 0){
       throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
@@ -76,7 +76,7 @@ class Permission {
     $res = $this -> _permission -> login($body['username'], $password);
 
     if(!empty($res)){
-      $lifeTime = 24 * 60 * 60;
+      $lifeTime = 7 * 24 * 60 * 60;
       $payload = [
         "iss" => "root",
         "sub" => "zxnote",

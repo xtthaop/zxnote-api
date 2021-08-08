@@ -45,12 +45,30 @@ class JwtAuth {
       return false;
     }
 
-    if(isset($payload['exp']) && $payload['exp'] < time()){
+    if(isset($payload['nbf']) && $payload['nbf'] > time()){
       return false;
     }
 
-    if(isset($payload['nbf']) && $payload['nbf'] > time()){
+    $lifeTime = 7 * 24 * 60 * 60;
+    $refreshTime = 30 * 24 * 60 * 60;
+
+    if(isset($payload['exp']) && $payload['exp'] < time() && ($payload['exp'] + $refreshTime) < time()){
       return false;
+    }
+
+    if(isset($payload['exp']) && $payload['exp'] < time() && ($payload['exp'] + $refreshTime) > time()){
+      $newPayload = [
+        "iss" => "root",
+        "sub" => "zxnote",
+        "iat" => time(),
+        "nbf" => time(),
+        "exp" => time() + $lifeTime,
+        "jti" => md5(uniqid('JWT').time()),
+        "uid" => $payload['uid'],
+        "unm" => $payload['unm'],
+      ];
+      $newToken = self::getToken($newPayload);
+      setcookie('ZXNOTETOKEN', $newToken, 0, '/');
     }
     
     return $payload;
