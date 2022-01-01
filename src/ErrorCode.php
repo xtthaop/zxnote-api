@@ -10,4 +10,5 @@
     const USERNAME_CANNOT_EMPTY = 4008; // 用户名不能为空
     const PASSWOED_CANNOT_EMPTY = 4009; // 密码不能为空
     const USER_VERIFY_FAILED = 4010; // 用户名与密码不匹配 
+    const INVALID_PICTURE_FORMAT = 4011; // 不支持的图片格式
   }
