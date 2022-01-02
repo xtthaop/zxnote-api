@@ -120,5 +120,13 @@
       $stml -> bindParam(':note_content', $noteContent);
       $stml -> execute();
     }
+
+    public function getAllNoteContent(){
+      $sql = 'SELECT `note_content` FROM `note`';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute();
+      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $result;
+    }
   }
 

@@ -1,11 +1,19 @@
 <?php
 
 class Upload {
+  private $_noteLib;
+
+  public function __construct(NoteLib $noteLib){
+    $this -> _noteLib = $noteLib;
+  }
+
   public function handleUpload(){
     $requestMethod = $_SERVER['REQUEST_METHOD'];
     switch ($requestMethod){
       case 'POST':
         return $this -> _handleUploadFile();
+      case 'DELETE':
+        return $this -> _handleClearCache();
       default:
         throw new Exception("请求方法不被允许", 405);
     }
@@ -41,7 +49,7 @@ class Upload {
     if(move_uploaded_file($_FILES["file"]["tmp_name"], $path)){
 
       if($uploadDir == 'images'){
-        $this -> limitPictureSize($path);
+        $this -> _limitPictureSize($path);
       }
 
       return [
@@ -56,7 +64,7 @@ class Upload {
     }
   }
 
-  public function limitPictureSize($file) {
+  private function _limitPictureSize($file) {
     list($width, $height) = getimagesize($file);
     $newWidth = 0;
     $newHeight = 0;
@@ -86,6 +94,53 @@ class Upload {
     $dst = imagecreatetruecolor($newWidth, $newHeight);
     imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
     imagepng($dst, $file);
+  }
+
+  private function _handleClearCache(){
+    $content = $this -> _noteLib -> getAllNoteContent();
+    $re = '/\!\[.*\]\((.*)\)/';
+    $matchesArr = [];
+    foreach($content as $key => $value){
+      if(preg_match_all($re, $value['note_content'], $matches)){
+        foreach($matches[1] as $key => $value){
+          if(!in_array($value, $matchesArr)){
+            $matchesArr[] = '.' . $value;
+          }
+        }
+      }
+    }
+
+    $allFileList = $this -> _getDirFileList('./uploads');
+
+    foreach($allFileList as $key => $value){
+      if(in_array($value, $matchesArr)){
+        $this -> _limitPictureSize($value);
+      }else{
+        unlink($value);
+      }
+    }
+
+    return [
+      'code' => 0,
+      'message' => 'success',
+    ];
+  }
+
+  private function _getDirFileList($directory){
+    static $array = [];
+
+    $dir = dir($directory);
+    while($file = $dir -> read()){
+      if(is_dir("$directory/$file") && $file !== '.' && $file !== '..'){
+        $this -> _getDirFileList("$directory/$file");
+      }else{
+        if($file !== '.' && $file !== '..'){
+          $array[] = "$directory/$file";
+        }
+      }
+    }
+
+    return $array;
   }
 }
 

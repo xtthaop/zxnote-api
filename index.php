@@ -144,7 +144,7 @@
   $noteLib = new NoteLib($pdo);
   $permissionLib = new PermissionLib($pdo);
 
-  $upload = new Upload();
+  $upload = new Upload($noteLib);
   $permission = new Permission($permissionLib, $captcha, $jwt);
   $category = new Category($categoryLib, $noteLib);
   $note = new Note($noteLib, $categoryLib, $wxsdk);
