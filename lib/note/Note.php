@@ -122,11 +122,20 @@
     }
 
     public function getAllNoteContent(){
-      $sql = 'SELECT `note_content` FROM `note`';
+      $sql = 'SELECT `note_id`, `note_content` FROM `note`';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
       return $result;
+    }
+
+    public function updateNoteContentAndState($noteId, $noteContent) {
+      $sql = 'UPDATE `note` SET `note_content`=:note_content, `publish_note_content`=`note_content`,
+             `publish_update_status`=1 WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> bindParam(':note_content', $noteContent);
+      $stml -> execute();
     }
   }
 

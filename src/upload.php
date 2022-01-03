@@ -56,7 +56,7 @@ class Upload {
         'code' => 0,
         'message' => 'success',
         'data' => [
-          'url' => $url,
+          'url' => '/restful' . $url,
         ],
       ];
     }else{
@@ -97,21 +97,36 @@ class Upload {
   }
 
   private function _handleClearCache(){
-    $content = $this -> _noteLib -> getAllNoteContent();
+    $noteList = $this -> _noteLib -> getAllNoteContent();
     $re = '/\!\[.*\]\((.*)\)/';
     $matchesArr = [];
-    foreach($content as $key => $value){
-      if(preg_match_all($re, $value['note_content'], $matches)){
-        foreach($matches[1] as $key => $value){
-          if(!in_array($value, $matchesArr)){
-            $matchesArr[] = '.' . $value;
+    foreach($noteList as $noteKey => $note){
+      if(preg_match_all($re, $note['note_content'], $matches)){
+        foreach($matches[1] as $matchKey => $matchValue){
+
+          // 自动修改图片路径前缀并将笔记更新状态记为已更新
+          if(substr($matchValue, 0, 8) === 'https://'){
+            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
+            $matchValue = "/restful" . "/" . substr($matchValue, 25);
+          }
+          if(substr($matchValue, 0, 8) === '/uploads'){
+            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
+            $matchValue = "/restful" . $matchValue;
+          }
+          $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
+
+          // 生成笔记用到的所有文件的路径数组
+          if(!in_array($matchValue, $matchesArr)){
+            $matchesArr[] = '.' . substr($matchValue, 8);
           }
         }
       }
     }
 
+    // 获取服务器存储的所有已上传文件的列表
     $allFileList = $this -> _getDirFileList('./uploads');
 
+    // 检查分辨率如果已上传文件列表中路径没有在笔记中用到则删除
     foreach($allFileList as $key => $value){
       if(in_array($value, $matchesArr)){
         $this -> _limitPictureSize($value);
