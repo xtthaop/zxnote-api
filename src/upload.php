@@ -97,23 +97,33 @@ class Upload {
   }
 
   private function _handleClearCache(){
+    $backupDir = "./uploads_clear_backup";
+    if(!is_dir($backupDir)){
+      mkdir($backupDir, 0777, true);
+    }
+
     $noteList = $this -> _noteLib -> getAllNoteContent();
     $re = '/\!\[.*\]\((.*)\)/';
     $matchesArr = [];
+
     foreach($noteList as $noteKey => $note){
       if(preg_match_all($re, $note['note_content'], $matches)){
         foreach($matches[1] as $matchKey => $matchValue){
 
-          // 自动修改图片路径前缀并将笔记更新状态记为已更新
-          // if(substr($matchValue, 0, 8) === 'https://'){
-          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
-          //   $matchValue = "/restful" . "/" . substr($matchValue, 25);
-          // }
-          // if(substr($matchValue, 0, 8) === '/uploads'){
-          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
-          //   $matchValue = "/restful" . $matchValue;
-          // }
-          // $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
+          //自动修改图片路径前缀并将笔记更新状态记为已更新
+          if(substr($matchValue, 0, 8) === 'https://'){
+            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
+            $matchValue = "/restful" . "/" . substr($matchValue, 25);
+          }
+          if(substr($matchValue, 0, 8) === '/uploads'){
+            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
+            $matchValue = "/restful" . $matchValue;
+          }
+          if(substr($matchValue, 0, 16) === '/restful/restful'){
+            $noteList[$noteKey]['note_content'] = str_replace($matchValue, substr($matchValue, 8), $noteList[$noteKey]['note_content']);
+            $matchValue = substr($matchValue, 8);
+          }
+          $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
 
           // 生成笔记用到的所有文件的路径数组
           if(!in_array($matchValue, $matchesArr)){
@@ -131,6 +141,9 @@ class Upload {
       if(in_array($value, $matchesArr)){
         $this -> _limitPictureSize($value);
       }else{
+        $tempArr = explode('/', $value);
+        $fileName = $tempArr[count($tempArr) - 1];
+        copy($value, "$backupDir/$fileName");
         unlink($value);
       }
     }
@@ -146,10 +159,10 @@ class Upload {
 
     $dir = dir($directory);
     while($file = $dir -> read()){
-      if(is_dir("$directory/$file") && $file !== '.' && $file !== '..'){
+      if(is_dir("$directory/$file") && $file !== '.' && $file !== '..' && $file !== '.DS_Store'){
         $this -> _getDirFileList("$directory/$file");
       }else{
-        if($file !== '.' && $file !== '..'){
+        if($file !== '.' && $file !== '..' && $file !== '.DS_Store'){
           $array[] = "$directory/$file";
         }
       }
