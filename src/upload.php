@@ -105,15 +105,15 @@ class Upload {
         foreach($matches[1] as $matchKey => $matchValue){
 
           // 自动修改图片路径前缀并将笔记更新状态记为已更新
-          if(substr($matchValue, 0, 8) === 'https://'){
-            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
-            $matchValue = "/restful" . "/" . substr($matchValue, 25);
-          }
-          if(substr($matchValue, 0, 8) === '/uploads'){
-            $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
-            $matchValue = "/restful" . $matchValue;
-          }
-          $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
+          // if(substr($matchValue, 0, 8) === 'https://'){
+          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
+          //   $matchValue = "/restful" . "/" . substr($matchValue, 25);
+          // }
+          // if(substr($matchValue, 0, 8) === '/uploads'){
+          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
+          //   $matchValue = "/restful" . $matchValue;
+          // }
+          // $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
 
           // 生成笔记用到的所有文件的路径数组
           if(!in_array($matchValue, $matchesArr)){
