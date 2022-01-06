@@ -51,6 +51,10 @@ class Upload {
       if($uploadDir == 'images'){
         $this -> _limitPictureSize($path);
         $this -> _generateLowRatioPicture($path);
+        list($width) = getimagesize($path);
+        if($width < 720){
+          $url = $url . "?w/$width";
+        }
       }
 
       return [
