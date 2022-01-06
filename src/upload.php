@@ -50,6 +50,7 @@ class Upload {
 
       if($uploadDir == 'images'){
         $this -> _limitPictureSize($path);
+        $this -> _generateLowRatioPicture($path);
       }
 
       return [
@@ -69,6 +70,7 @@ class Upload {
     $newWidth = 0;
     $newHeight = 0;
     $maxWidth = 720;
+    if($width <= $maxWidth) return;
     $r = $height / $width;
 
     if($width > $maxWidth){
@@ -82,18 +84,46 @@ class Upload {
 
     $src = null;
     $suffix = explode('.', $file)[2];
-    switch($suffix){
-      case 'png':
-        $src = imagecreatefrompng($file);
-        break;
-      case 'jpg':
-      case 'jpeg':
-        $src = imagecreatefromjpeg($file);
-    }
+    
+    $imageData = file_get_contents($file);
+    $src = imagecreatefromstring($imageData);
 
     $dst = imagecreatetruecolor($newWidth, $newHeight);
     imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-    imagepng($dst, $file);
+    switch($suffix){
+      case 'png':
+        imagepng($dst, $file);
+        break;
+      case 'jpg':
+      case 'jpeg':
+        imagejpeg($dst, $file);
+    }
+  }
+
+  private function _generateLowRatioPicture($file){
+    list($width, $height) = getimagesize($file);
+    $maxWidth = 12;
+    if($width <= $maxWidth) return;
+    $r = $height / $width;
+    $newWidth = $maxWidth;
+    $newHeight = $newWidth * $r;
+
+    $src = null;
+    $suffix = explode('.', $file)[2];
+
+    $imageData = file_get_contents($file);
+    $src = imagecreatefromstring($imageData);
+
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    switch($suffix){
+      case 'png':
+        imagepng($dst, str_replace(".$suffix", "_low_ratio.$suffix", $file));
+        break;
+      case 'jpg':
+      case 'jpeg':
+        imagejpeg($dst, str_replace(".$suffix", "_low_ratio.$suffix", $file));
+    }
   }
 
   private function _handleClearCache(){
@@ -127,7 +157,10 @@ class Upload {
 
           // 生成笔记用到的所有文件的路径数组
           if(!in_array($matchValue, $matchesArr)){
-            $matchesArr[] = '.' . substr($matchValue, 8);
+            $suffix = explode('.', $matchValue)[1];
+            $path = '.' . substr($matchValue, 8);
+            $matchesArr[] = $path;
+            $matchesArr[] = str_replace(".$suffix", "_low_ratio.$suffix", $path);
           }
         }
       }
@@ -138,9 +171,15 @@ class Upload {
 
     // 检查分辨率如果已上传文件列表中路径没有在笔记中用到则删除
     foreach($allFileList as $key => $value){
-      if(in_array($value, $matchesArr)){
-        $this -> _limitPictureSize($value);
-      }else{
+      $flag = true;
+      foreach($matchesArr as $matcheKey => $matcheValue){
+        if(substr_count($matcheValue, $value)){
+          $flag = false;
+          $this -> _limitPictureSize($value);
+          $this -> _generateLowRatioPicture($value);
+        }
+      }
+      if($flag){
         $tempArr = explode('/', $value);
         $fileName = $tempArr[count($tempArr) - 1];
         copy($value, "$backupDir/$fileName");
