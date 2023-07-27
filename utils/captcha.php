@@ -75,12 +75,12 @@ Class Captcha {
       }
     }
 
-    $dir = "./public/captcha";
-    if(!is_dir($dir)){
-      mkdir($dir, 0777, true);
+    if(!is_dir('./public/captcha')){
+      mkdir('./public/captcha', 0777);
     }
-    imagepng($dst_im, $dir . '/dst.png');
-    imagepng($jigsaw_im, $dir . '/jigsaw.png');
+
+    imagepng($dst_im, './public/captcha/dst.png');
+    imagepng($jigsaw_im, './public/captcha/jigsaw.png');
     imagedestroy($src_im);
     imagedestroy($dst_im);
     imagedestroy($jigsaw_im);

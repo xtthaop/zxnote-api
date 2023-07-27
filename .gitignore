@@ -1,4 +1,7 @@
 .DS_Store
-public/captcha
-uploads
-uploads_clear_backup
+public/*
+!public/.gitkeep
+uploads/*
+!uploads/.gitkeep
+uploads_clear_backup/*
+!uploads_clear_backup/.gitkeep
