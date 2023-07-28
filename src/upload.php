@@ -108,12 +108,18 @@ class Upload {
     list($width, $height) = getimagesize($file);
     $maxWidth = 12;
     if($width <= $maxWidth) return;
+
+    $suffix = explode('.', $file)[2];
+    $lowRatioPic = str_replace(".$suffix", "_low_ratio.$suffix", $file);
+    if(file_exists($lowRatioPic)) return;
+    
     $r = $height / $width;
     $newWidth = $maxWidth;
     $newHeight = $newWidth * $r;
 
-    $src = null;
-    $suffix = explode('.', $file)[2];
+    if($newHeight < 1){
+      $newHeight = 1;
+    }
 
     $imageData = file_get_contents($file);
     $src = imagecreatefromstring($imageData);
@@ -122,11 +128,11 @@ class Upload {
     imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
     switch($suffix){
       case 'png':
-        imagepng($dst, str_replace(".$suffix", "_low_ratio.$suffix", $file));
+        imagepng($dst, $lowRatioPic);
         break;
       case 'jpg':
       case 'jpeg':
-        imagejpeg($dst, str_replace(".$suffix", "_low_ratio.$suffix", $file));
+        imagejpeg($dst, $lowRatioPic);
     }
   }
 
@@ -144,25 +150,17 @@ class Upload {
       if(preg_match_all($re, $note['note_content'], $matches)){
         foreach($matches[1] as $matchKey => $matchValue){
 
-          //自动修改图片路径前缀并将笔记更新状态记为已更新
+          // 自动修改图片路径前缀并将笔记更新状态记为已更新
           // if(substr($matchValue, 0, 8) === 'https://'){
           //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . "/" . substr($matchValue, 25), $noteList[$noteKey]['note_content']);
           //   $matchValue = "/restful" . "/" . substr($matchValue, 25);
           // }
-          // if(substr($matchValue, 0, 8) === '/uploads'){
-          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, "/restful" . $matchValue, $noteList[$noteKey]['note_content']);
-          //   $matchValue = "/restful" . $matchValue;
-          // }
-          // if(substr($matchValue, 0, 16) === '/restful/restful'){
-          //   $noteList[$noteKey]['note_content'] = str_replace($matchValue, substr($matchValue, 8), $noteList[$noteKey]['note_content']);
-          //   $matchValue = substr($matchValue, 8);
-          // }
           // $this -> _noteLib -> updateNoteContentAndState($noteList[$noteKey]['note_id'], $noteList[$noteKey]['note_content']);
 
           // 生成笔记用到的所有文件的路径数组
-          if(!in_array($matchValue, $matchesArr)){
-            $suffix = explode('.', $matchValue)[1];
-            $path = '.' . substr($matchValue, 8);
+          $suffix = explode('.', $matchValue)[1];
+          $path = '.' . substr($matchValue, 8);
+          if(!in_array($path, $matchesArr)){
             $matchesArr[] = $path;
             $matchesArr[] = str_replace(".$suffix", "_low_ratio.$suffix", $path);
           }
@@ -171,16 +169,26 @@ class Upload {
     }
 
     // 获取服务器存储的所有已上传文件的列表
-    $allFileList = $this -> _getDirFileList('./uploads');
+    $allFileList = $this -> _getDirFileList('./uploads/images');
 
-    // 检查分辨率如果已上传文件列表中路径没有在笔记中用到则删除
+    // var_dump('文章中匹配到的图片总数:' . count($matchesArr));
+    // var_dump('实际上传目录的文件总数:' . count($allFileList));
+
+    // 记录实际上传的与文章中的文件相匹配的列表
+    // $uploadsMatchWithNoteArr = [];
+
+    // 如果已上传文件列表中路径没有在笔记中用到则移到备份文件夹
     foreach($allFileList as $key => $value){
       $flag = true;
       foreach($matchesArr as $matcheKey => $matcheValue){
         if(substr_count($matcheValue, $value)){
+
+          // $uploadsMatchWithNoteArr[] = $matcheValue;
+
           $flag = false;
           $this -> _limitPictureSize($value);
           $this -> _generateLowRatioPicture($value);
+          break;
         }
       }
       if($flag){
@@ -190,6 +198,24 @@ class Upload {
         unlink($value);
       }
     }
+
+    // var_dump('实际上传的与文章中的文件相匹配的总数:' . count($uploadsMatchWithNoteArr));
+
+    // 找出实际上传的与文章中的文件有哪些没有匹配到
+    // $uploadsNoMatchWithNoteArr = [];
+    // foreach($matchesArr as $matcheKey => $matcheValue){
+    //   $flag = true;
+    //   foreach($uploadsMatchWithNoteArr as $key => $value){
+    //     if($matcheValue == $value){
+    //       $flag = false;
+    //     }
+    //   }
+    //   if($flag){
+    //     $uploadsNoMatchWithNoteArr[] = $matcheValue;
+    //   }
+    // }
+    // var_dump('实际上传的与文章中的文件不相匹配的总数:' . count($uploadsNoMatchWithNoteArr));
+    // var_dump('实际上传的与文章中的文件不相匹配有:', $uploadsNoMatchWithNoteArr);
 
     return [
       'code' => 0,
