@@ -11,4 +11,5 @@
     const PASSWOED_CANNOT_EMPTY = 4009; // 密码不能为空
     const USER_VERIFY_FAILED = 4010; // 用户名与密码不匹配 
     const INVALID_PICTURE_FORMAT = 4011; // 不支持的图片格式
+    const OLD_PASSWORD_VERIFY_FAILED = 4012; // 旧密码验证失败
   }

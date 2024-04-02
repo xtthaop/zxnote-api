@@ -30,6 +30,15 @@ class Permission {
         switch($params[2]){
           case 'login':
             return $this -> _handleLogin();
+          case 'logout':
+            return $this -> _handleUserLogout();
+          default:
+            throw new Exception('请求的资源不存在', 404);
+        }
+      case 'PUT':
+        switch($params[2]){
+          case 'change_password':
+            return $this -> _handleChangePassword();
           default:
             throw new Exception('请求的资源不存在', 404);
         }
@@ -72,22 +81,11 @@ class Permission {
       throw new Exception("密码不能为空", ErrorCode::PASSWOED_CANNOT_EMPTY);
     }
 
-    $password = $this -> _md5($body['password']);
+    $password = $this -> _jwt -> md5Password($body['password']);
     $res = $this -> _permission -> login($body['username'], $password);
 
     if(!empty($res)){
-      $lifeTime = 7 * 24 * 60 * 60;
-      $payload = [
-        "iss" => "root",
-        "sub" => "zxnote",
-        "iat" => time(),
-        "nbf" => time(),
-        "exp" => time() + $lifeTime,
-        "jti" => md5(uniqid('JWT').time()),
-        "uid" => $res['user_id'],
-        "unm" => $res['username'],
-      ];
-
+      $payload = $this -> _jwt -> generatePayload($res);
       $token = $this -> _jwt -> getToken($payload);
 
       return [
@@ -98,12 +96,9 @@ class Permission {
         ],
       ];
     }else{
+      $_SESSION['captcha_x'] = mt_rand(0, $_SESSION['captcha_x'] - 10);
       throw new Exception("用户名与密码不匹配", ErrorCode::USER_VERIFY_FAILED);
     }
-  }
-
-  private function _md5($string, $key = 'ZxNo@te!19@96#'){
-    return md5($string . $key);
   }
 
   private function _handleGetUserInfo(){
@@ -118,9 +113,45 @@ class Permission {
     return [
       'code' => 0,
       'message' => 'success',
-      'data' => [
-        'username' => $res['username'],
-      ]
+      'data' => $res,
+    ];
+  }
+
+  private function _handleChangePassword(){
+    global $gUserId;
+    $raw = file_get_contents('php://input');
+    $body = json_decode($raw, true);
+
+    if(
+      !(isset($body['old_password']) && strlen($body['old_password'])) ||
+      !(isset($body['new_password']) && strlen($body['new_password'])) ||
+      $body['confirm_password'] !== $body['new_password']
+    ){
+      throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+    }
+
+    $oldPassword = $this -> _jwt -> md5Password($body['old_password']);
+    $res = $this -> _permission -> verifyOldPassword($gUserId, $oldPassword);
+
+    if(!empty($res)){
+      $body['new_password'] = $this -> _jwt -> md5Password($body['new_password']);
+      $this -> _permission -> changePassword($gUserId, $body);
+    }else{
+      throw new Exception('旧密码验证失败', ErrorCode::OLD_PASSWORD_VERIFY_FAILED);
+    }
+
+    return [
+      'code' => 0,
+      'message' => 'success',
+    ];
+  }
+
+  private function _handleUserLogout(){
+    $this -> _jwt -> addTokenToBlack($_SERVER['HTTP_X_TOKEN']);
+
+    return [
+      'code' => 0,
+      'message' => 'success',
     ];
   }
 } 

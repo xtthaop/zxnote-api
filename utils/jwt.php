@@ -1,13 +1,14 @@
 <?php
 
 class JwtAuth {
+  private static $tokenRedisKey = 'zxnote_token_blacklist';
 
   private static $header = [
     'alg' => 'HS256',
     'typ' => 'JWT'
   ];
 
-  private static $key = 'ZX%$note19#96!';
+  private static $key = 'zxnote';
 
   private static function signature(string $input, string $key, string $alg = 'HS256'){
     $alg_config = [ 'HS256' => 'sha256' ];
@@ -15,11 +16,15 @@ class JwtAuth {
   }
 
   public static function getToken(array $payload){
-    $base64header = self::base64UrlEncode(json_encode(self::$header, JSON_UNESCAPED_UNICODE));
-    $base64payload = self::base64UrlEncode(json_encode($payload, JSON_UNESCAPED_UNICODE));
+    if(is_array($payload)){
+      $base64header = self::base64UrlEncode(json_encode(self::$header, JSON_UNESCAPED_UNICODE));
+      $base64payload = self::base64UrlEncode(json_encode($payload, JSON_UNESCAPED_UNICODE));
 
-    $token = $base64header . '.' . $base64payload . '.' . self::signature($base64header . '.' . $base64payload, self::$key, self::$header['alg']);
-    return $token;
+      $token = $base64header . '.' . $base64payload . '.' . self::signature($base64header . '.' . $base64payload, self::$key, self::$header['alg']);
+      return $token;
+    }else{
+      return false;
+    }
   } 
 
   public static function verifyToken(string $token){
@@ -49,29 +54,35 @@ class JwtAuth {
       return false;
     }
 
-    $lifeTime = 7 * 24 * 60 * 60;
-    $refreshTime = 30 * 24 * 60 * 60;
+    $refreshTime = 30 * 60;
 
-    if(isset($payload['exp']) && $payload['exp'] < time() && ($payload['exp'] + $refreshTime) < time()){
+    if(isset($payload['exp']) && $payload['exp'] < time()){
       return false;
     }
 
-    if(isset($payload['exp']) && $payload['exp'] < time() && ($payload['exp'] + $refreshTime) > time()){
-      $newPayload = [
-        "iss" => "root",
-        "sub" => "zxnote",
-        "iat" => time(),
-        "nbf" => time(),
-        "exp" => time() + $lifeTime,
-        "jti" => md5(uniqid('JWT').time()),
-        "uid" => $payload['uid'],
-        "unm" => $payload['unm'],
-      ];
+    if(isset($payload['exp']) && $payload['exp'] > time() && ($payload['exp'] - $refreshTime) <= time()){
+      $newPayload = self::generatePayload($payload);
       $newToken = self::getToken($newPayload);
       setcookie('ZXNOTETOKEN', $newToken, 0, '/');
     }
     
     return $payload;
+  }
+
+  public static function generatePayload($info){
+    $lifeTime = 2 * 60 * 60;
+
+
+    return [
+      "iss" => "root",
+      "sub" => "zxnote",
+      "iat" => time(),
+      "nbf" => time(),
+      "exp" => time() + $lifeTime,
+      "jti" => md5(uniqid('JWT').time()),
+      "uid" => $info['uid'],
+      "unm" => $info['unm'],
+    ];
   }
 
   private static function base64UrlEncode(string $input){
@@ -85,5 +96,24 @@ class JwtAuth {
       $input .= str_repeat('=', $addlen);
     }
     return base64_decode(strtr($input, '-_', '+/'));
+  }
+
+  public function md5Password($string, $key = 'ZxNo@te!19@96#'){
+    return md5($string . $key);
+  }
+
+  public function addTokenToBlack($token) {
+    $redis = new Redis();
+    $redis -> connect('127.0.0.1', 6379);
+    $redis -> zAdd(self::$tokenRedisKey, time(), $token);
+    $redis -> close();
+  }
+
+  public function checkTokenInBlack($token) {
+    $redis = new Redis();
+    $redis -> connect('127.0.0.1', 6379);
+    $res = $redis -> zScore(self::$tokenRedisKey, $token);
+    $redis -> close();
+    return $res;
   }
 }

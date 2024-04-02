@@ -79,24 +79,29 @@
 
     private function _verifyToken(){
       global $gUserId;
+      $path = $_SERVER['PATH_INFO'];
 
       if(empty($_SERVER['HTTP_X_TOKEN'])){
-        $this -> _checkPermissionWhiteList();
+        if(!in_array($path, $this -> _permissionWhiteList)){
+          throw new Exception("权限验证失败，请登录", 401);
+        }
       }else{
+        if (in_array($path, $this -> _permissionWhiteList)){
+          return;
+        }
+
+        $tokenInBlack = $this -> _jwt -> checkTokenInBlack($_SERVER['HTTP_X_TOKEN']);
+        if($tokenInBlack){
+          throw new Exception("权限验证失败，请重新登录", 401);
+        }
+
         $res = $this -> _jwt -> verifyToken($_SERVER['HTTP_X_TOKEN']);
 
-        if($res){
+        if(!empty($res)){
           $gUserId = $res['uid'];
         }else{
-          $this -> _checkPermissionWhiteList();
+          throw new Exception("权限验证失败，请重新登录", 401);
         }
-      }
-    }
-
-    private function _checkPermissionWhiteList(){
-      $path = $_SERVER['PATH_INFO'];
-      if(!in_array($path, $this -> _permissionWhiteList)){
-        throw new Exception("权限验证失败，请登录", 401);
       }
     }
 
