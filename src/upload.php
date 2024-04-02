@@ -45,7 +45,7 @@ class Upload {
 
     $path = $rootDir . '/' . $fileName;
     $url = substr($path, 1);
-    
+
     if(move_uploaded_file($_FILES["file"]["tmp_name"], $path)){
 
       if($uploadDir == 'images'){
@@ -73,7 +73,7 @@ class Upload {
     list($width, $height) = getimagesize($file);
     $newWidth = 0;
     $newHeight = 0;
-    $maxWidth = 720;
+    $maxWidth = 1440;
     if($width <= $maxWidth) return;
     $r = $height / $width;
 
@@ -88,18 +88,24 @@ class Upload {
 
     $src = null;
     $suffix = explode('.', $file)[2];
-    
-    $imageData = file_get_contents($file);
-    $src = imagecreatefromstring($imageData);
 
-    $dst = imagecreatetruecolor($newWidth, $newHeight);
-    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
     switch($suffix){
       case 'png':
+        $imageData = file_get_contents($file);
+        $src = imagecreatefromstring($imageData);
+        $dst = imagecreatetruecolor($newWidth, $newHeight);
+        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+        imagefill($dst, 0, 0, $transparent);
+        imagesavealpha($dst, true);
+        imagealphablending($dst, false);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
         imagepng($dst, $file);
         break;
       case 'jpg':
       case 'jpeg':
+        $src = imagecreatefromjpeg($file);
+        $dst = imagecreatetruecolor($newWidth, $newHeight);
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
         imagejpeg($dst, $file);
     }
   }

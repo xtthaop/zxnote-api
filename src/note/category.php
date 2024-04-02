@@ -49,7 +49,7 @@
         'code' => 0,
         'message' => 'success',
         'data' => [
-	  'category_list' => $categoryList,
+	        'category_list' => $categoryList,
         ],
       ];
     }

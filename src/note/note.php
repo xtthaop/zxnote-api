@@ -18,8 +18,9 @@
       switch($requestMethod){
         case 'POST':
           switch($params[2]){
-            case 'create_note':
-              return $this -> _handleCreateNote();
+            // 后台
+            case 'add_note':
+              return $this -> _handleAddNote();
             case 'move_note':
               return $this -> _handleMoveNote();
             case 'save_note':
@@ -31,12 +32,14 @@
           }
         case 'GET':
           switch($params[2]){
-            case 'get_published_note_list':
-              return $this -> _handleGetPublishedNoteList();
-            case 'get_category_note':
-              return $this -> _handleGetCategoryNote();
+            // 后台
             case 'get_note_content':
               return $this -> _handleGetNoteContent();
+            case 'get_category_note':
+              return $this -> _handleGetCategoryNote();
+            // 前台
+            case 'get_published_note_list':
+              return $this -> _handleGetPublishedNoteList();
             case 'get_note':
               return $this -> _handleGetNote();
             case 'get_wx_config':
@@ -45,17 +48,19 @@
               throw new Exception('请求的资源不存在', 404);
           }
         case 'DELETE':
+          // 后台
           return $this -> _handleDeleteNote();
         default:
           throw new Exception('请求方法不被允许', 405);
       }
     }
 
+    // 后台
     private function _handlePublishNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
 
-      if(!$body['publish_status'] && $body['publish_status'] != 0){
+      if(!$body['publish_status'] && $body['publish_status'] !== 0){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
@@ -70,13 +75,9 @@
       ];  
     }
 
-    private function _handleCreateNote(){
+    private function _handleAddNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
-
-      if(!$body['note_title']){
-        throw new Exception('请输入笔记标题', ErrorCode::NO_NOTE_TITLE);
-      }
 
       if(!$body['category_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
@@ -88,7 +89,8 @@
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
       
-      $id = $this -> _noteLib -> createNote($body['note_title'], $body['category_id']);
+      $noteTitle = date('Y-m-d');
+      $id = $this -> _noteLib -> addNote($noteTitle, $body['category_id']);
       return [
         'code' => 0,
         'message' => 'success',
@@ -114,17 +116,6 @@
       return [
         'code' => 0,
         'message' => 'success'
-      ];
-    }
-
-    private function _handleGetPublishedNoteList(){
-      $noteList = $this -> _noteLib -> getPublishedNoteList();
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => [
-          'note_list' => $noteList,
-        ],
       ];
     }
 
@@ -187,6 +178,33 @@
       ];
     }
 
+    private function _handleSaveNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> saveNote($body['note_id'], $body['note_title'], $body['note_content']);
+      return [
+        'code' => 0,
+        'message' => 'success'
+      ];
+    }
+    
+    // 前台
+    private function _handleGetPublishedNoteList(){
+      $noteList = $this -> _noteLib -> getPublishedNoteList();
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'note_list' => $noteList,
+        ],
+      ];
+    }
+
     private function _handleGetNote(){
       $params = $_GET;
 
@@ -204,21 +222,6 @@
         'code' => 0,
         'message' => 'success',
         'data' => $res
-      ];
-    }
-
-    private function _handleSaveNote(){
-      $raw = file_get_contents('php://input');
-      $body = json_decode($raw, true);
-
-      if(!$body['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $this -> _noteLib -> saveNote($body['note_id'], $body['note_title'], $body['note_content']);
-      return [
-        'code' => 0,
-        'message' => 'success'
       ];
     }
 
