@@ -37,6 +37,8 @@
               return $this -> _handleGetNoteContent();
             case 'get_category_note':
               return $this -> _handleGetCategoryNote();
+            case 'get_files_info':
+              return $this -> _handleNoteFiles(false);
             // 前台
             case 'get_published_note_list':
               return $this -> _handleGetPublishedNoteList();
@@ -49,7 +51,14 @@
           }
         case 'DELETE':
           // 后台
-          return $this -> _handleDeleteNote();
+          switch($params[2]){
+            case 'delete_note':
+              return $this -> _handleDeleteNote();
+            case 'clear_files':
+              return $this -> _handleNoteFiles(true);
+            default:
+              throw new Exception('请求的资源不存在', 404);
+          }
         default:
           throw new Exception('请求方法不被允许', 405);
       }
@@ -234,5 +243,108 @@
         'data' => $signPackage,
       ]; 
     }
-  }
 
+    private function _handleNoteFiles($isDelete){
+      $re = '/\!\[.*?\]\((\S*) ?\S*\)|\[.*?\]: *\n?(\S*) ?\S*/';
+      $backupDir = "./uploads_clear_backup";
+      $imgDir = '/uploads/images';
+      $noteList = $this -> _noteLib -> getAllNoteContent();
+  
+      $referImgsNum = 0;
+      $referImgsList = [];
+  
+      foreach($noteList as $noteKey => $note){
+        if(preg_match_all($re, $note['note_content'], $matches)){
+          $matchesArr = array_unique(array_merge($matches[1], $matches[2]));
+  
+          foreach($matchesArr as $matchKey => $matchValue){
+            if($matchValue){
+              $suffix = explode('.', $matchValue)[1];
+              $path = preg_replace('/^https?:\/\/.*\/restful|^\/restful/', '', $matchValue);
+              
+              $position = strpos($matchValue, $imgDir);
+              if($position !== false){
+                if(!in_array($path, $referImgsList)){
+                  $referImgsList[] = $path;
+                  $referImgsList[] = str_replace(".$suffix", "_low_ratio.$suffix", $path);
+                  $referImgsNum += 2;
+                }
+              }
+            }
+          }
+        }
+      }
+  
+      $existingImgsList = $this -> _getDirFileList(".$imgDir");
+      $existingImgsNum = count($existingImgsList);
+      $existingImgsSize = 0;
+  
+      $confirmedImgsNum = 0;
+      $confirmedImgsList = [];
+  
+      $deletedImgsNum = 0;
+      $deletedImgsList = [];
+      $deletedImgsSize = 0;
+  
+      foreach($existingImgsList as $key => $value){
+        $flag = true;
+        $existingImgsSize += filesize($value);
+  
+        foreach($referImgsList as $matcheKey => $matcheValue){
+          if(substr_count(".$matcheValue", $value)){
+            $confirmedImgsNum++;
+            $confirmedImgsList[] = $value;
+            $flag = false;
+            break;
+          }
+        }
+  
+        if($flag){
+          $deletedImgsNum++;
+          $deletedImgsList[] = $value;
+          $deletedImgsSize += filesize($value);
+  
+          if($isDelete){
+            $tempArr = explode('/', $value);
+            $fileName = $tempArr[count($tempArr) - 1];
+            copy($value, "$backupDir/$fileName");
+            unlink($value);
+          }
+        }
+      }
+  
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'refer_imgs_num' => $referImgsNum,
+          'refer_imgs_list' => $referImgsList,
+          'existing_imgs_num' => $existingImgsNum,
+          'existing_imgs_list' => $existingImgsList,
+          'existing_imgs_size'=> $existingImgsSize,
+          'confirmed_imgs_num' => $confirmedImgsNum,
+          'confirmed_imgs_list' => $confirmedImgsList,
+          'deleted_imgs_num' => $deletedImgsNum,
+          'deleted_imgs_list' => $deletedImgsList,
+          'deleted_imgs_size' => $deletedImgsSize,
+        ],
+      ];
+    }
+  
+    private function _getDirFileList($directory){
+      static $array = [];
+  
+      $dir = dir($directory);
+      while($file = $dir -> read()){
+        if(is_dir("$directory/$file") && $file !== '.' && $file !== '..' && $file !== '.DS_Store'){
+          $this -> _getDirFileList("$directory/$file");
+        }else{
+          if($file !== '.' && $file !== '..' && $file !== '.DS_Store'){
+            $array[] = "$directory/$file";
+          }
+        }
+      }
+  
+      return $array;
+    }
+  }
