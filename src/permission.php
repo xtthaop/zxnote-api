@@ -96,6 +96,7 @@ class Permission {
         ],
       ];
     }else{
+      // 重置验证码否则拿到这个验证码可不受验证限制不断重试密码
       $_SESSION['captcha_x'] = mt_rand(0, $_SESSION['captcha_x'] - 10);
       throw new Exception("用户名与密码不匹配", ErrorCode::USER_VERIFY_FAILED);
     }
