@@ -4,11 +4,13 @@
     private $_noteLib;
     private $_categoryLib;
     private $_wxsdk;
+    private $_upload;
 
-    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib, WXSDK $wxsdk){
+    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib, WXSDK $wxsdk, Upload $upload){
       $this -> _noteLib = $noteLib;
       $this -> _categoryLib = $categoryLib;
       $this -> _wxsdk = $wxsdk;
+      $this -> _upload = $upload;
     }
 
     public function handleNote(){
@@ -310,6 +312,12 @@
             copy($value, "$backupDir/$fileName");
             unlink($value);
           }
+        }else{
+          // 需要统一处理一下所有已上传的图片时将这里的注释打开
+          // if(!preg_match('/_low_ratio.+$/', $value)){
+          //   $this -> _upload -> limitPictureSize($value);
+          //   $this -> _upload -> generateLowRatioPicture($value);
+          // }
         }
       }
   

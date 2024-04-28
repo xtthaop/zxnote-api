@@ -44,8 +44,8 @@ class Upload {
     if(move_uploaded_file($_FILES["file"]["tmp_name"], $path)){
 
       if($uploadDir == 'images'){
-        $this -> _limitPictureSize($path);
-        $this -> _generateLowRatioPicture($path);
+        $this -> limitPictureSize($path);
+        $this -> generateLowRatioPicture($path);
         list($width) = getimagesize($path);
         $url = $url . "?w/$width";
       }
@@ -62,59 +62,65 @@ class Upload {
     }
   }
 
-  private function _limitPictureSize($file) {
+  public function limitPictureSize($file) {
     list($width, $height) = getimagesize($file);
-    $newWidth = 0;
-    $newHeight = 0;
-    $maxWidth = 1440;
+    $maxWidth = 720;
+
+    // 需要统一处理一下所有已上传的图片时将下面这行注释掉
     if($width <= $maxWidth) return;
+
     $r = $height / $width;
+    $newWidth = $maxWidth;
+    $newHeight = (int)round($newWidth * $r);
 
-    if($width > $maxWidth){
-      $newWidth = $maxWidth;
-      $newHeight = $newWidth * $r;
+    if($newHeight < 1){
+      $newHeight = 1;
     }
 
-    if($newWidth == 0){
-      return;
-    }
-
-    $src = null;
     $suffix = explode('.', $file)[2];
 
     switch($suffix){
       case 'png':
-        $imageData = file_get_contents($file);
-        $src = imagecreatefromstring($imageData);
-        $dst = imagecreatetruecolor($newWidth, $newHeight);
-        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-        imagefill($dst, 0, 0, $transparent);
-        imagesavealpha($dst, true);
-        imagealphablending($dst, false);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        imagepng($dst, $file);
+        $this -> _generatePNG($file, $file, $newWidth, $newHeight, $width, $height);
         break;
       case 'jpg':
       case 'jpeg':
-        $src = imagecreatefromjpeg($file);
-        $dst = imagecreatetruecolor($newWidth, $newHeight);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        imagejpeg($dst, $file);
+        $this -> _generateJPG($file, $file, $newWidth, $newHeight, $width, $height);
     }
   }
 
-  private function _generateLowRatioPicture($file){
+  private function _generatePNG($srcFilePath, $dstFilePath, $newWidth, $newHeight, $width, $height){
+    $imageData = file_get_contents($srcFilePath);
+    $src = imagecreatefromstring($imageData);
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+    imagefill($dst, 0, 0, $transparent);
+    imagesavealpha($dst, true);
+    imagealphablending($dst, false);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    imagepng($dst, $dstFilePath);
+  }
+
+  private function _generateJPG($srcFilePath, $dstFilePath, $newWidth, $newHeight, $width, $height){
+    $imageData = file_get_contents($srcFilePath);
+    $src = imagecreatefromstring($imageData);
+    $dst = imagecreatetruecolor($newWidth, $newHeight);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+    imagejpeg($dst, $dstFilePath);
+  }
+
+  public function generateLowRatioPicture($file){
     list($width, $height) = getimagesize($file);
     $maxWidth = 12;
+
     if($width <= $maxWidth) return;
 
     $suffix = explode('.', $file)[2];
     $lowRatioPic = str_replace(".$suffix", "_low_ratio.$suffix", $file);
-    if(file_exists($lowRatioPic)) return;
     
     $r = $height / $width;
     $newWidth = $maxWidth;
-    $newHeight = $newWidth * $r;
+    $newHeight = (int)round($newWidth * $r);
 
     if($newHeight < 1){
       $newHeight = 1;
@@ -122,22 +128,11 @@ class Upload {
 
     switch($suffix){
       case 'png':
-        $imageData = file_get_contents($file);
-        $src = imagecreatefromstring($imageData);
-        $dst = imagecreatetruecolor($newWidth, $newHeight);
-        $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
-        imagefill($dst, 0, 0, $transparent);
-        imagesavealpha($dst, true);
-        imagealphablending($dst, false);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        imagepng($dst, $lowRatioPic);
+        $this -> _generatePNG($file, $lowRatioPic, $newWidth, $newHeight, $width, $height);
         break;
       case 'jpg':
       case 'jpeg':
-        $src = imagecreatefromjpeg($file);
-        $dst = imagecreatetruecolor($newWidth, $newHeight);
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        imagejpeg($dst, $lowRatioPic);
+        $this -> _generateJPG($file, $lowRatioPic, $newWidth, $newHeight, $width, $height);
     }
   }
 }
