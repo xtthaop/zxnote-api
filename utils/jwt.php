@@ -71,7 +71,7 @@ class JwtAuth {
 
   public static function generatePayload($info){
     $lifeTime = 2 * 60 * 60;
-
+    // $lifeTime = 5;
 
     return [
       "iss" => "root",

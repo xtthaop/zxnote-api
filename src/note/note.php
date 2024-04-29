@@ -326,14 +326,14 @@
         'message' => 'success',
         'data' => [
           'refer_imgs_num' => $referImgsNum,
-          'refer_imgs_list' => $referImgsList,
+          // 'refer_imgs_list' => $referImgsList,
           'existing_imgs_num' => $existingImgsNum,
-          'existing_imgs_list' => $existingImgsList,
+          // 'existing_imgs_list' => $existingImgsList,
           'existing_imgs_size'=> $existingImgsSize,
           'confirmed_imgs_num' => $confirmedImgsNum,
-          'confirmed_imgs_list' => $confirmedImgsList,
+          // 'confirmed_imgs_list' => $confirmedImgsList,
           'deleted_imgs_num' => $deletedImgsNum,
-          'deleted_imgs_list' => $deletedImgsList,
+          // 'deleted_imgs_list' => $deletedImgsList,
           'deleted_imgs_size' => $deletedImgsSize,
         ],
       ];
