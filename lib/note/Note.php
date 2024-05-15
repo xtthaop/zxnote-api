@@ -11,20 +11,19 @@
     public function publishNote($noteId, $status){
       $currentTime = date('Y:m:d H:m:s');
 
-      $selectSql = 'SELECT `publish_status` FROM `note` WHERE `note_id`=:note_id';
+      $selectSql = 'SELECT `status` FROM `note` WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($selectSql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
-      $publishStatus = $stml -> fetch()[0];
+      $oldStatus = $stml -> fetch()[0];
 
       $arr = array();
-      $updateSql = 'UPDATE `note` SET `publish_status`=:publish_status, `publish_update_status`=:publish_update_status,';
-      $arr[':publish_status'] = $status;
-      $arr[':publish_update_status'] = $status;
+      $updateSql = 'UPDATE `note` SET `status`=:status,';
+      $arr[':status'] = $status;
 
       if($status){
         $updateSql .= ' `publish_note_title`=`note_title`, `publish_note_content`=`note_content`,';
-        if($publishStatus){
+        if($oldStatus){
           $updateSql .= ' `publish_update_time`=:publish_update_time';
         }else{
           $updateSql .= ' `publish_time`=:publish_time, `publish_update_time`=:publish_update_time';
@@ -51,7 +50,7 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `publish_status`, `publish_update_status` 
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`
               FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
@@ -83,7 +82,7 @@
     }
 
     public function getNoteContent($noteId){
-      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `publish_status`, `publish_update_status`
+      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `status`
               FROM `note` WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
@@ -93,9 +92,18 @@
     }
 
     public function saveNote($noteId, $noteTitle, $noteContent){
-      $sql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content, 
-             `publish_update_status`=0 WHERE `note_id`=:note_id';
-      $stml = $this -> _db -> prepare($sql);
+      $selectSql = 'SELECT `status` FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($selectSql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $oldStatus = $stml -> fetch()[0];
+
+      $updateSql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content';
+      if($oldStatus === 1){
+        $updateSql .= ', `status`=2';
+      }
+      $updateSql .= ' WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($updateSql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> bindParam(':note_title', $noteTitle);
       $stml -> bindParam(':note_content', $noteContent);
@@ -113,7 +121,7 @@
     // 前台
     public function getPublishedNoteList(){
       $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
-             `publish_update_time` FROM `note` where `publish_status`=1 ORDER BY publish_time DESC';
+             `publish_update_time` FROM `note` where `status`>=1 ORDER BY publish_time DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
@@ -122,7 +130,7 @@
 
     public function getNote($noteId){
       $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
-             `publish_update_time` FROM `note` WHERE `note_id`=:note_id AND `publish_status`=1';
+             `publish_update_time` FROM `note` WHERE `note_id`=:note_id AND `status`>=1';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();

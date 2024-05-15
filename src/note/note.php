@@ -71,7 +71,7 @@
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
 
-      if(!$body['publish_status'] && $body['publish_status'] !== 0){
+      if(!$body['status'] && $body['status'] !== 0){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
@@ -79,7 +79,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
       
-      $this -> _noteLib -> publishNote($body['note_id'], $body['publish_status']);
+      $this -> _noteLib -> publishNote($body['note_id'], $body['status']);
       return [
         'code' => 0,
         'message' => 'success',
