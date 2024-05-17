@@ -46,7 +46,15 @@
       $stml -> bindParam(':note_title', $title);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
-      return $this -> _db -> lastInsertId();
+      
+      $lastInsertId = $this -> _db -> lastInsertId();
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`
+              FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $lastInsertId);
+      $stml -> execute();
+      $result = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $result;
     }
 
     public function getCategoryNote($categoryId){

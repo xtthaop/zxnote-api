@@ -101,13 +101,11 @@
       }
       
       $noteTitle = date('Y-m-d');
-      $id = $this -> _noteLib -> addNote($noteTitle, $body['category_id']);
+      $res = $this -> _noteLib -> addNote($noteTitle, $body['category_id']);
       return [
         'code' => 0,
         'message' => 'success',
-        'data' => [
-          'note_id' => intval($id),
-        ]
+        'data' => $res
       ];
     }
      
