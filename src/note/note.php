@@ -37,6 +37,10 @@
             // 后台
             case 'get_note_content':
               return $this -> _handleGetNoteContent();
+            case 'get_note_history_list':
+              return $this -> _handleGetNoteHistoryList();
+            case 'get_note_history_version':
+              return $this -> _handleGetNoteHistoryVersion();
             case 'get_category_note':
               return $this -> _handleGetCategoryNote();
             case 'get_files_info':
@@ -128,6 +132,50 @@
       ];
     }
 
+    private function _handleGetNoteHistoryList(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $note = $this -> _noteLib -> getNote($params['note_id'], false);
+
+      if(!$note){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $res = $this -> _noteLib -> getNoteHistoryList($params['note_id']);
+     
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+         'note_history_list' => $res,
+        ],
+      ];
+    }
+
+    private function _handleGetNoteHistoryVersion(){
+      $params = $_GET;
+
+      if(!$params['id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $res = $this -> _noteLib -> getNoteHistoryVersion($params['id']);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $res
+      ];
+    }
+
     private function _handleGetCategoryNote(){
       $params = $_GET;
 
@@ -148,8 +196,8 @@
         'message' => 'success',
         'data' => [
          'category_note_list' => $categoryNote,
-       ],
-     ];
+        ],
+      ];
     }
 
     private function _handleDeleteNote(){
