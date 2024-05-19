@@ -104,7 +104,7 @@
       return $content;
     }
 
-    public function saveNote($noteId, $noteTitle, $noteContent){
+    public function saveNote($noteId, $noteTitle, $noteContent, $saveHistory = true){
       $selectSql = 'SELECT `status` FROM `note` WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($selectSql);
       $stml -> bindParam(':note_id', $noteId);
@@ -122,13 +122,15 @@
       $stml -> bindParam(':note_content', $noteContent);
       $stml -> execute();
 
-      $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`)
-                     VALUES (:note_id, :note_title, :note_content)';
-      $stml = $this -> _db -> prepare($historySql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> bindParam(':note_title', $noteTitle);
-      $stml -> bindParam(':note_content', $noteContent);
-      $stml -> execute();
+      if ($saveHistory) {
+        $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`)
+                       VALUES (:note_id, :note_title, :note_content)';
+        $stml = $this -> _db -> prepare($historySql);
+        $stml -> bindParam(':note_id', $noteId);
+        $stml -> bindParam(':note_title', $noteTitle);
+        $stml -> bindParam(':note_content', $noteContent);
+        $stml -> execute();
+      }
     }
 
     public function getNoteHistoryList($noteId){
@@ -157,16 +159,7 @@
       return $result;
     }
 
-    // 前台
-    public function getPublishedNoteList(){
-      $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
-             `publish_update_time` FROM `note` where `status`>=1 ORDER BY publish_time DESC';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> execute();
-      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
-      return $result;
-    }
-
+    // 前后台通用
     public function getNote($noteId, $checkStatus = true){
       $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
              `publish_update_time` FROM `note` WHERE `note_id`=:note_id';
@@ -178,6 +171,16 @@
       $stml -> execute();
       $res = $stml -> fetch(PDO::FETCH_ASSOC);
       return $res;
+    }
+
+    // 前台
+    public function getPublishedNoteList(){
+      $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
+             `publish_update_time` FROM `note` where `status`>=1 ORDER BY publish_time DESC';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute();
+      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $result;
     }
 
     // 调试

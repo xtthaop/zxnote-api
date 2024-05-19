@@ -32,6 +32,14 @@
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
+        case 'PUT':
+          switch($params[2]){
+            // 后台
+            case 'recovery_note':
+              return $this -> _handleRecoveryNote();
+            default:
+              throw new Exception('请求的资源不存在', 404); 
+          }
         case 'GET':
           switch($params[2]){
             // 后台
@@ -173,6 +181,36 @@
         'code' => 0,
         'message' => 'success',
         'data' => $res
+      ];
+    }
+
+    private function _handleRecoveryNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $res = $this -> _noteLib -> getNoteHistoryVersion($body['id']);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $note = $this -> _noteLib -> getNote($res['note_id'], false);
+
+      if(!$note){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $this -> _noteLib -> saveNote($res['note_id'], $res['note_title'], $res['note_content'], false);
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'note_id' => $res['note_id']
+        ]
       ];
     }
 
