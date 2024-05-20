@@ -59,7 +59,7 @@
 
     public function getCategoryNote($categoryId){
       $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`
-              FROM `note` WHERE `category_id`=:category_id ORDER BY `create_time` DESC';
+              FROM `note` WHERE `deleted_at` IS NULL AND `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
@@ -68,9 +68,11 @@
     }
 
     public function deleteNote($noteId){
-      $sql = 'DELETE FROM `note` WHERE note_id=:note_id';
+      $currentTime = date('Y:m:d H:m:s');
+      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at WHERE note_id=:note_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
+      $stml -> bindParam(':deleted_at', $currentTime);
       $stml -> execute();
 
       $sql = 'DELETE FROM `note_history` WHERE note_id=:note_id';
@@ -80,7 +82,14 @@
     }
     
     public function deleteCategoryAllNote($categoryId){
-      $sql = 'DELETE FROM `note` WHERE category_id=:category_id';
+      $currentTime = date('Y:m:d H:m:s');
+      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at WHERE category_id=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> bindParam(':deleted_at', $currentTime);
+      $stml -> execute();
+
+      $sql = 'DELETE FROM `note_history` WHERE category_id=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
@@ -105,11 +114,13 @@
     }
 
     public function saveNote($noteId, $noteTitle, $noteContent, $saveHistory = true){
-      $selectSql = 'SELECT `status` FROM `note` WHERE `note_id`=:note_id';
+      $selectSql = 'SELECT `status`, `category_id` FROM `note` WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($selectSql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
-      $oldStatus = $stml -> fetch()[0];
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      $oldStatus = $res['status'];
+      $categoryId = $res['category_id'];
 
       $updateSql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content';
       if($oldStatus === 1){
@@ -123,12 +134,13 @@
       $stml -> execute();
 
       if ($saveHistory) {
-        $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`)
-                       VALUES (:note_id, :note_title, :note_content)';
+        $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`, `category_id`)
+                       VALUES (:note_id, :note_title, :note_content, :category_id)';
         $stml = $this -> _db -> prepare($historySql);
         $stml -> bindParam(':note_id', $noteId);
         $stml -> bindParam(':note_title', $noteTitle);
         $stml -> bindParam(':note_content', $noteContent);
+        $stml -> bindParam(':category_id', $categoryId);
         $stml -> execute();
       }
     }
