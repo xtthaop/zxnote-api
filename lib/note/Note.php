@@ -58,7 +58,7 @@
     }
 
     public function getCategoryNote($categoryId){
-      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`, `category_id`
               FROM `note` WHERE `deleted_at` IS NULL AND `category_id`=:category_id ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
@@ -69,7 +69,9 @@
 
     public function deleteNote($noteId){
       $currentTime = date('Y:m:d H:m:s');
-      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at WHERE note_id=:note_id';
+      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
+              `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
+              WHERE note_id=:note_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> bindParam(':deleted_at', $currentTime);
@@ -80,10 +82,19 @@
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
     }
+
+    public function completelyDeleteNote($noteId){
+      $sql = 'DELETE FROM `note` WHERE note_id=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+    }
     
     public function deleteCategoryAllNote($categoryId){
       $currentTime = date('Y:m:d H:m:s');
-      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at WHERE category_id=:category_id';
+      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
+              `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
+              WHERE category_id=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> bindParam(':deleted_at', $currentTime);
@@ -170,14 +181,37 @@
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
       return $result;
     }
+    
+    public function getDeletedNoteList(){
+      $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`, `category_id` FROM `note`
+              WHERE `deleted_at` IS NOT NULL ORDER BY deleted_at DESC';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute();
+      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $result;
+    }
 
-    // 前后台通用
-    public function getNote($noteId, $checkStatus = true){
+    public function getDeletedNote($noteId){
+      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`
+              FROM `note` WHERE `note_id`=:note_id AND `deleted_at` IS NOT NULL';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $content = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $content;
+    }
+
+    public function restoreNote($noteId){
+      $sql = 'UPDATE `note` SET `deleted_at`=null WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+    }
+
+    // 前台
+    public function getPublishNote($noteId){
       $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
-             `publish_update_time` FROM `note` WHERE `note_id`=:note_id';
-      if($checkStatus){
-        $sql .= ' AND `status`>=1';
-      }
+             `publish_update_time` FROM `note` WHERE `note_id`=:note_id AND `status`>=1';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
@@ -185,7 +219,6 @@
       return $res;
     }
 
-    // 前台
     public function getPublishedNoteList(){
       $sql = 'SELECT `note_id`, `publish_note_title`, `publish_note_content`, `publish_time`, 
              `publish_update_time` FROM `note` where `status`>=1 ORDER BY publish_time DESC';

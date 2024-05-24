@@ -37,6 +37,8 @@
             // 后台
             case 'recovery_note':
               return $this -> _handleRecoveryNote();
+            case 'restore_note':
+              return $this -> _handleRestoreNote();
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
@@ -53,11 +55,15 @@
               return $this -> _handleGetCategoryNote();
             case 'get_files_info':
               return $this -> _handleNoteFiles(false);
+            case 'get_deleted_note_list':
+              return $this -> _handleGetDeletedNoteList();
+            case 'get_deleted_note':
+              return $this -> _handleGetDeletedNote();
             // 前台
             case 'get_published_note_list':
               return $this -> _handleGetPublishedNoteList();
             case 'get_note':
-              return $this -> _handleGetNote();
+              return $this -> _handleGetPublishNote();
             case 'get_wx_config':
               return $this -> _handleGetWxConfig();
             default:
@@ -68,6 +74,8 @@
           switch($params[2]){
             case 'delete_note':
               return $this -> _handleDeleteNote();
+            case 'completely_delete_note':
+              return $this -> _handleCompletelyDeleteNote();
             case 'clear_files':
               return $this -> _handleNoteFiles(true);
             default:
@@ -147,7 +155,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $note = $this -> _noteLib -> getNote($params['note_id'], false);
+      $note = $this -> _noteLib -> getNoteContent($params['note_id']);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -198,7 +206,7 @@
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
 
-      $note = $this -> _noteLib -> getNote($res['note_id'], false);
+      $note = $this -> _noteLib -> getNoteContent($res['note_id']);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -211,6 +219,42 @@
         'data' => [
           'note_id' => $res['note_id']
         ]
+      ];
+    }
+
+    private function _handleRestoreNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $note = $this -> _noteLib -> getNoteContent($body['note_id']);
+
+      if(!$note){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $this -> _noteLib -> restoreNote($body['note_id']);
+      return [
+        'code' => 0,
+        'message' => 'success'
+      ];
+    }
+
+    function _handleCompletelyDeleteNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> completelyDeleteNote($body['note_id']);
+      return [
+        'code' => 0,
+        'message' => 'success'
       ];
     }
 
@@ -286,48 +330,6 @@
         'code' => 0,
         'message' => 'success'
       ];
-    }
-    
-    // 前台
-    private function _handleGetPublishedNoteList(){
-      $noteList = $this -> _noteLib -> getPublishedNoteList();
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => [
-          'note_list' => $noteList,
-        ],
-      ];
-    }
-
-    private function _handleGetNote(){
-      $params = $_GET;
-
-      if(!$params['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-      
-      $res = $this -> _noteLib -> getNote($params['note_id']);
-
-      if(!$res){
-        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
-      }
-
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => $res
-      ];
-    }
-
-    private function _handleGetWxConfig(){
-      $params = $_GET;
-      $signPackage = $this -> _wxsdk -> getSignPackage($params['url']);
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => $signPackage,
-      ]; 
     }
 
     private function _handleNoteFiles($isDelete){
@@ -438,5 +440,78 @@
       }
   
       return $array;
+    }
+
+    private function _handleGetDeletedNoteList(){
+      $noteList = $this -> _noteLib -> getDeletedNoteList();
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'note_list' => $noteList,
+        ],
+      ];
+    }
+
+    private function _handleGetDeletedNote(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $res = $this -> _noteLib -> getDeletedNote($params['note_id']);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $res
+      ];
+    }
+    
+    // 前台
+    private function _handleGetPublishedNoteList(){
+      $noteList = $this -> _noteLib -> getPublishedNoteList();
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'note_list' => $noteList,
+        ],
+      ];
+    }
+
+    private function _handleGetPublishNote(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+      
+      $res = $this -> _noteLib -> getPublishNote($params['note_id']);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $res
+      ];
+    }
+
+    private function _handleGetWxConfig(){
+      $params = $_GET;
+      $signPackage = $this -> _wxsdk -> getSignPackage($params['url']);
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $signPackage,
+      ]; 
     }
   }
