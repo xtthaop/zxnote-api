@@ -275,6 +275,16 @@
       }
 
       $this -> _noteLib -> completelyDeleteNote($body['note_id']);
+
+      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id']);
+
+      if($category){
+        $categoryNote = $this -> _noteLib -> getCategoryNote($note['category_id']);
+        if(empty($categoryNote) && $category['deleted_at'] !== null){
+          $this -> _categoryLib -> completelyDeleteCategory($note['category_id']);
+        }
+      }
+
       return [
         'code' => 0,
         'message' => 'success'

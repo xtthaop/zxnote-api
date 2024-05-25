@@ -33,6 +33,13 @@
       $stml -> execute();
     }
 
+    public function completelyDeleteCategory($categoryId){
+      $sql = 'DELETE FROM `note_category` WHERE category_id=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> execute();
+    }
+
     public function updateCategory($categoryId, $categoryName){
       $sql = 'UPDATE `note_category` SET category_name=:category_name  WHERE category_id=:category_id';
       $stml = $this -> _db -> prepare($sql);

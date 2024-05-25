@@ -64,6 +64,12 @@
 
       $this -> _categoryLib -> deleteCategory($body['category_id']);
       $this -> _noteLib -> deleteCategoryAllNote($body['category_id']);
+
+      $categoryNote = $this -> _noteLib -> getCategoryNote($body['category_id']);
+      if(empty($categoryNote)){
+        $this -> _categoryLib -> completelyDeleteCategory($body['category_id']);
+      }
+
       return [
         'code' => 0,
         'message' => 'success'
