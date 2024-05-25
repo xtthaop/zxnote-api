@@ -49,6 +49,13 @@
       $result = $stml -> fetch(PDO::FETCH_ASSOC);
       return $result;
     }
+
+    public function restoreCategory($categoryId){
+      $sql = 'UPDATE `note_category` SET `deleted_at`=null WHERE `category_id`=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> execute();
+    }
   }
 
 

@@ -57,11 +57,12 @@
               return $this -> _handleNoteFiles(false);
             case 'get_deleted_note_list':
               return $this -> _handleGetDeletedNoteList();
-            case 'get_deleted_note':
-              return $this -> _handleGetDeletedNote();
+            case 'get_deleted_note_content':
+              return $this -> _handleGetDeletedNoteContent();
             // 前台
             case 'get_published_note_list':
               return $this -> _handleGetPublishedNoteList();
+            // TODO: 接口名字修改
             case 'get_note':
               return $this -> _handleGetPublishNote();
             case 'get_wx_config':
@@ -155,7 +156,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $note = $this -> _noteLib -> getNoteContent($params['note_id']);
+      $note = $this -> _noteLib -> getNoteBasicInfo($params['note_id']);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -206,7 +207,7 @@
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
 
-      $note = $this -> _noteLib -> getNoteContent($res['note_id']);
+      $note = $this -> _noteLib -> getNoteBasicInfo($res['note_id']);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -230,16 +231,32 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $note = $this -> _noteLib -> getNoteContent($body['note_id']);
+      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id']);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
 
+      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id']);
+
+      if(!$category){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $restoreCategory = null;
+      if($category['deleted_at']){
+        $this -> _categoryLib -> restoreCategory($note['category_id']);
+        $category['deleted_at'] = null;
+        $restoreCategory = $category;
+      }
+
       $this -> _noteLib -> restoreNote($body['note_id']);
       return [
         'code' => 0,
-        'message' => 'success'
+        'message' => 'success',
+        'data' => [
+          'restore_category' => $restoreCategory
+        ]
       ];
     }
 
@@ -249,6 +266,12 @@
 
       if(!$body['note_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id']);
+
+      if(!$note){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
 
       $this -> _noteLib -> completelyDeleteNote($body['note_id']);
@@ -453,14 +476,14 @@
       ];
     }
 
-    private function _handleGetDeletedNote(){
+    private function _handleGetDeletedNoteContent(){
       $params = $_GET;
 
       if(!$params['note_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $res = $this -> _noteLib -> getDeletedNote($params['note_id']);
+      $res = $this -> _noteLib -> getNoteContent($params['note_id'], true);
 
       if(!$res){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);

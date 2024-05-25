@@ -114,9 +114,26 @@
       $stml -> execute();
     }
 
-    public function getNoteContent($noteId){
-      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `status`
+    public function getNoteBasicInfo($noteId){
+      $sql = 'SELECT `note_id`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
+    }
+
+    public function getNoteContent($noteId, $isDeleted = false){
+      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`, `status`
+              FROM `note` WHERE `note_id`=:note_id';
+
+      if($isDeleted){
+        $sql .= ' AND `deleted_at` IS NOT NULL';
+      }else{
+        $sql .= ' AND `deleted_at` IS NULL';
+      }
+
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
@@ -189,16 +206,6 @@
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
       return $result;
-    }
-
-    public function getDeletedNote($noteId){
-      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`
-              FROM `note` WHERE `note_id`=:note_id AND `deleted_at` IS NOT NULL';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
-      $content = $stml -> fetch(PDO::FETCH_ASSOC);
-      return $content;
     }
 
     public function restoreNote($noteId){
