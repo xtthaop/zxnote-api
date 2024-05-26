@@ -367,7 +367,10 @@
 
     private function _handleNoteFiles($isDelete){
       $re = '/\!\[.*?\]\((\S*) ?\S*\)|\[.*?\]: *\n?(\S*) ?\S*/';
-      $backupDir = "./uploads_clear_backup";
+      $backupDir = "./uploads_clear_backup/images";
+      if(!is_dir($backupDir)){
+        mkdir($backupDir, 0777, true);
+      }
       $imgDir = '/uploads/images';
       $noteList = $this -> _noteLib -> getAllNoteContent();
   
@@ -428,8 +431,9 @@
           if($isDelete){
             $tempArr = explode('/', $value);
             $fileName = $tempArr[count($tempArr) - 1];
-            copy($value, "$backupDir/$fileName");
-            unlink($value);
+            if(copy($value, "$backupDir/$fileName")){
+              unlink($value);
+            }
           }
         }else{
           // 需要统一处理一下所有已上传的图片时将这里的注释打开

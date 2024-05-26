@@ -6,6 +6,7 @@
 
   require './src/note/category.php';
   require './src/note/note.php';
+  require './src/note/img.php';
   require './src/upload.php';
   require './src/permission.php';
 
@@ -30,7 +31,7 @@
 
     private $_resourceName;
 
-    private $_allowResource = ['category', 'note', 'upload', 'permission'];
+    private $_allowResource = ['category', 'note', 'note_img', 'upload', 'permission'];
 
     private $_allowRequestMethod = ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'];
 
@@ -53,12 +54,20 @@
       500 => 'Server Internal Error'
     ];
 
-    public function __construct(Category $category, Note $note, Upload $upload, Permission $permission, JwtAuth $jwt){
+    public function __construct(
+      Category $category, 
+      Note $note, 
+      Upload $upload, 
+      Permission $permission, 
+      JwtAuth $jwt,
+      NoteImg $noteImg
+    ){
       $this -> _category = $category;
       $this -> _note = $note;
       $this -> _upload = $upload;
       $this -> _permission = $permission;
       $this -> _jwt = $jwt;
+      $this -> _noteImg = $noteImg;
     }
 
     private function _setupRequestMethod(){
@@ -126,6 +135,9 @@
         if($this -> _resourceName == 'note'){
           $this -> _json($this -> _note -> handleNote());
         }
+        if($this -> _resourceName == 'note_img'){
+          $this -> _json($this -> _noteImg -> handleNoteImg());
+        }
         if($this -> _resourceName == 'upload'){
           $this -> _json($this -> _upload -> handleUpload());
         }
@@ -153,7 +165,8 @@
   $permission = new Permission($permissionLib, $captcha, $jwt);
   $category = new Category($categoryLib, $noteLib);
   $note = new Note($noteLib, $categoryLib, $wxsdk, $upload);
+  $noteImg = new NoteImg();
 
-  $restful = new Restful($category, $note, $upload, $permission, $jwt);
+  $restful = new Restful($category, $note, $upload, $permission, $jwt, $noteImg);
   $restful -> run();
 
