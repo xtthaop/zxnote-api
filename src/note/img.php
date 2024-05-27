@@ -12,6 +12,20 @@
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
+        case 'PUT':
+          switch($params[2]){
+            case 'restore_note_img':
+              return $this -> _handleRestoreOrDeleteImg();
+            default:
+              throw new Exception('请求的资源不存在', 404); 
+          }
+        case 'DELETE':
+          switch($params[2]){
+            case 'completely_delete_img':
+              return $this -> _handleRestoreOrDeleteImg(true);
+            default:
+              throw new Exception('请求的资源不存在', 404); 
+          }
         default:
           throw new Exception('请求方法不被允许', 405);
       }
@@ -26,7 +40,10 @@
       foreach($backupImgs as $img => $time){
         if(!strpos($img, 'low_ratio')){
           $value = '/restful' . substr($img, 1);
-          $imgList[] = $value;
+          $imgList[] = [
+            'url' => $value,
+            'update_time' => $time
+          ];
         }
       }
 
@@ -53,5 +70,42 @@
       }
   
       return $array;
+    }
+
+    private function _handleRestoreOrDeleteImg($isDelete = false){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['img_path']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $array = [];
+      $imgDir = './uploads/images';
+
+      $imgPath = str_replace("/restful", "", $body['img_path']);
+      $array[] = '.' . $imgPath;
+
+      $suffix = explode('.', $imPath)[1];
+      $lowRatioImgPath = str_replace(".$suffix", "_low_ratio.$suffix", $imgPath);
+      $array[] = '.' . $lowRatioImgPath;
+
+      foreach($array as $value){
+        if($isDelete){
+          unlink($value);
+          continue;
+        }
+
+        $tempArr = explode('/', $value);
+        $fileName = $tempArr[count($tempArr) - 1];
+        if(copy($value, "$imgDir/$fileName")){
+          unlink($value);
+        }
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success'
+      ];
     }
   }
