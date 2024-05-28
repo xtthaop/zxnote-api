@@ -5,12 +5,14 @@
     private $_categoryLib;
     private $_wxsdk;
     private $_upload;
+    private $_noteImg;
 
-    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib, WXSDK $wxsdk, Upload $upload){
+    public function __construct(NoteLib $noteLib, CategoryLib $categoryLib, WXSDK $wxsdk, Upload $upload, NoteImg $noteImg){
       $this -> _noteLib = $noteLib;
       $this -> _categoryLib = $categoryLib;
       $this -> _wxsdk = $wxsdk;
       $this -> _upload = $upload;
+      $this -> _noteImg = $noteImg;
     }
 
     public function handleNote(){
@@ -77,8 +79,8 @@
               return $this -> _handleDeleteNote();
             case 'completely_delete_note':
               return $this -> _handleCompletelyDeleteNote();
-            case 'clear_files':
-              return $this -> _handleNoteFiles(true);
+            case 'clear_space':
+              return $this -> _handleClearSpace();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -443,20 +445,92 @@
           // }
         }
       }
+
+      $data;
+      if($isDelete){
+        $data = [
+          'num' => $deletedImgsNum,
+          'size' => $deletedImgsSize,
+        ];
+      }else{
+        $data = [
+          'refer' => [
+            'num' => $referImgsNum,
+            'list' => $referImgsList,
+            'desc' => '笔记已引用的图片',
+          ],
+          'existing' => [
+            'num' => $existingImgsNum,
+            'list' => $existingImgsList,
+            'size' => $existingImgsSize,
+            'desc' => '现存所有的图片',
+          ],
+          'confirmed' => [
+            'num' => $confirmedImgsNum,
+            'list' => $confirmedImgsList,
+            'desc' => '现存被笔记引用的图片',
+          ],
+          'deleted' => [
+            'num' => $deletedImgsNum,
+            'list' => $deletedImgsList,
+            'size' => $deletedImgsSize,
+            'desc' => '需要删除的图片',
+          ],
+        ];
+      }
   
       return [
         'code' => 0,
         'message' => 'success',
+        'data' => $data,
+      ];
+    }
+
+    private function _handleClearSpace(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['checked']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $deletedHistoryNotesNum = 0;
+      $softDeletedImgsNum = 0;
+      $softDeletedImgsSize = 0;
+      $deletedNotesNum = 0;
+      $deletedImgsNum = 0;
+      $deletedImgsSize = 0;
+
+      if(in_array('history', $body['checked'])){
+        if(!$body['time']){
+          throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+        }
+
+        $deletedHistoryNotesNum = $this -> _noteLib -> deleteNoteHistory($body['time']);
+      }
+
+      if(in_array('img', $body['checked'])){
+        $res = $this -> _handleNoteFiles(true);
+        $softDeletedImgsNum = $res['data']['num'];
+        $softDeletedImgsSize = $res['data']['size'];
+      }
+
+      if(in_array('recycle', $body['checked'])){
+        $deletedNotesNum = $this -> _noteLib -> completelyDeleteNote();
+        $res = $this -> _noteImg -> handleDeleteAllBackupImg();
+        $deletedImgsNum = $res['data']['num'];
+        $deletedImgsSize = $res['data']['size'];
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
         'data' => [
-          'refer_imgs_num' => $referImgsNum,
-          // 'refer_imgs_list' => $referImgsList,
-          'existing_imgs_num' => $existingImgsNum,
-          // 'existing_imgs_list' => $existingImgsList,
-          'existing_imgs_size'=> $existingImgsSize,
-          'confirmed_imgs_num' => $confirmedImgsNum,
-          // 'confirmed_imgs_list' => $confirmedImgsList,
+          'deleted_history_notes_num' => $deletedHistoryNotesNum,
+          'soft_deleted_imgs_num' => $softDeletedImgsNum,
+          'soft_deleted_imgs_size' => $softDeletedImgsSize,
+          'deleted_notes_num' => $deletedNotesNum,
           'deleted_imgs_num' => $deletedImgsNum,
-          // 'deleted_imgs_list' => $deletedImgsList,
           'deleted_imgs_size' => $deletedImgsSize,
         ],
       ];

@@ -108,4 +108,22 @@
         'message' => 'success'
       ];
     }
+
+    public function handleDeleteAllBackupImg(){
+      $backupDir = "./uploads_clear_backup/images";
+      $backupImgs = $this -> _getDirFileList($backupDir);
+      $totalFileSize = 0;
+      foreach($backupImgs as $img => $time){
+        $totalFileSize += filesize($img);
+        unlink($img);
+      }
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'num' => count($backupImgs),
+          'size' => $totalFileSize,
+        ]
+      ];
+    }
   }

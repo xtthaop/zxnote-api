@@ -83,11 +83,18 @@
       $stml -> execute();
     }
 
-    public function completelyDeleteNote($noteId){
-      $sql = 'DELETE FROM `note` WHERE note_id=:note_id';
+    public function completelyDeleteNote($noteId = false){
+      $array = array();
+      $sql = 'DELETE FROM `note` WHERE `deleted_at` IS NOT NULL';
+
+      if($noteId){
+        $sql .= ' AND `note_id`=:note_id';
+        $array[':note_id'] = $noteId;
+      }
+
       $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
+      $stml -> execute($array);
+      return $stml -> rowCount();
     }
     
     public function deleteCategoryAllNote($categoryId){
@@ -191,8 +198,31 @@
       return $res;
     }
 
+    public function deleteNoteHistory($time){
+      $currentTimestamp = time();
+      $daysToSubtract;
+      if($time === 1){
+        $daysToSubtract = 7 * 24 * 3600;
+      }else if($time === 2){
+        $daysToSubtract = 30 * 24 * 3600;
+      }
+
+      $arr = array();
+      $sql = 'DELETE FROM `note_history`';
+
+      if($time !== 3){
+        $time = date('Y:m:d H:m:s', $currentTimestamp - $daysToSubtract);
+        $sql .= ' WHERE `create_time`<=:time';
+        $array[':time'] = $time;
+      }
+      
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute($array);
+      return $stml -> rowCount();
+    }
+
     public function getAllNoteContent(){
-      $sql = 'SELECT `note_id`, `note_content` FROM `note`';
+      $sql = 'SELECT `note_content` FROM `note` UNION ALL SELECT `note_content` FROM `note_history`';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
