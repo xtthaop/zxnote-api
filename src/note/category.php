@@ -19,7 +19,7 @@
         case 'DELETE':
           return $this -> _handleDeleteCategory();
         case 'PUT':
-	  return $this -> _handleUpdateCategory();
+	        return $this -> _handleUpdateCategory();
         default:
           throw new Exception('请求方法不被允许', 405);
       }
@@ -48,9 +48,7 @@
       return [
         'code' => 0,
         'message' => 'success',
-        'data' => [
-	        'category_list' => $categoryList,
-        ],
+        'data' => $categoryList,
       ];
     }
 
@@ -62,12 +60,12 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $this -> _categoryLib -> deleteCategory($body['category_id']);
-      $this -> _noteLib -> deleteCategoryAllNote($body['category_id']);
-
-      $categoryNote = $this -> _noteLib -> getCategoryNote($body['category_id']);
+      $categoryNote = $this -> _noteLib -> getCategoryNote($body['category_id'], true);
       if(empty($categoryNote)){
         $this -> _categoryLib -> completelyDeleteCategory($body['category_id']);
+      }else{
+        $this -> _categoryLib -> softDeleteCategory($body['category_id']);
+        $this -> _noteLib -> softDeleteCategoryAllNote($body['category_id']);
       }
 
       return [

@@ -17,16 +17,16 @@
     }
 
     public function getCategoryList(){
-      $sql = 'SELECT * FROM `note_category` WHERE `deleted_at` IS NULL';
+      $sql = 'SELECT `category_id`, `category_name` FROM `note_category` WHERE `deleted_at` IS NULL ORDER BY `create_time` DESC';
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
-      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
-      return $result;
+      $res = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $res;
     }
 
-    public function deleteCategory($categoryId){
+    public function softDeleteCategory($categoryId){
       $currentTime = date('Y:m:d H:m:s');
-      $sql = 'UPDATE `note_category` SET `deleted_at`=:deleted_at WHERE category_id=:category_id';
+      $sql = 'UPDATE `note_category` SET `deleted_at`=:deleted_at WHERE `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> bindParam(':deleted_at', $currentTime);
@@ -34,14 +34,14 @@
     }
 
     public function completelyDeleteCategory($categoryId){
-      $sql = 'DELETE FROM `note_category` WHERE category_id=:category_id';
+      $sql = 'DELETE FROM `note_category` WHERE `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
     }
 
     public function updateCategory($categoryId, $categoryName){
-      $sql = 'UPDATE `note_category` SET category_name=:category_name  WHERE category_id=:category_id';
+      $sql = 'UPDATE `note_category` SET `category_name`=:category_name  WHERE `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> bindParam(':category_name', $categoryName);
@@ -53,12 +53,12 @@
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
-      $result = $stml -> fetch(PDO::FETCH_ASSOC);
-      return $result;
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
     }
 
     public function restoreCategory($categoryId){
-      $sql = 'UPDATE `note_category` SET `deleted_at`=null WHERE `category_id`=:category_id';
+      $sql = 'UPDATE `note_category` SET `deleted_at`=NULL WHERE `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
