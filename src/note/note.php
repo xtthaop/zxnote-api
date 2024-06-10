@@ -47,14 +47,14 @@
         case 'GET':
           switch($params[2]){
             // 后台
+            case 'get_category_note':
+              return $this -> _handleGetCategoryNote();
             case 'get_note_content':
               return $this -> _handleGetNoteContent();
             case 'get_note_history_list':
               return $this -> _handleGetNoteHistoryList();
             case 'get_note_history_version':
               return $this -> _handleGetNoteHistoryVersion();
-            case 'get_category_note':
-              return $this -> _handleGetCategoryNote();
             case 'get_files_info':
               return $this -> _handleNoteFiles(false);
             case 'get_deleted_note_list':
@@ -75,8 +75,8 @@
         case 'DELETE':
           // 后台
           switch($params[2]){
-            case 'delete_note':
-              return $this -> _handleDeleteNote();
+            case 'soft_delete_note':
+              return $this -> _handleSoftDeleteNote();
             case 'completely_delete_note':
               return $this -> _handleCompletelyDeleteNote();
             case 'clear_space':
@@ -90,25 +90,6 @@
     }
 
     // 后台
-    private function _handlePublishNote(){
-      $raw = file_get_contents('php://input');
-      $body = json_decode($raw, true);
-
-      if(!$body['status'] && $body['status'] !== 0){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      if(!$body['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-      
-      $this -> _noteLib -> publishNote($body['note_id'], $body['status']);
-      return [
-        'code' => 0,
-        'message' => 'success',
-      ];  
-    }
-
     private function _handleAddNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
@@ -131,7 +112,46 @@
         'data' => $res
       ];
     }
+
+    private function _handleGetCategoryNote(){
+      $params = $_GET;
+
+      if(!$params['category_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+      
+      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($params['category_id']);
+
+      if(!$isCategoryExist){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      $categoryNote = $this -> _noteLib -> getCategoryNote($params['category_id']);
      
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+         'category_note_list' => $categoryNote,
+        ],
+      ];
+    }
+
+    private function _handleSoftDeleteNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> softDeleteNote($body['note_id']);
+      return [
+        'code' => 0,
+        'message' => 'success'
+      ];
+    }
+
     private function _handleMoveNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
@@ -149,6 +169,25 @@
         'code' => 0,
         'message' => 'success'
       ];
+    }
+
+    private function _handlePublishNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['status'] && $body['status'] !== 0){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+      
+      $this -> _noteLib -> publishNote($body['note_id'], $body['status']);
+      return [
+        'code' => 0,
+        'message' => 'success',
+      ];  
     }
 
     private function _handleGetNoteHistoryList(){
@@ -287,45 +326,6 @@
         }
       }
 
-      return [
-        'code' => 0,
-        'message' => 'success'
-      ];
-    }
-
-    private function _handleGetCategoryNote(){
-      $params = $_GET;
-
-      if(!$params['category_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-      
-      $isCategoryExist = $this -> _categoryLib -> getCategoryInfo($params['category_id']);
-
-      if(!$isCategoryExist){
-        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
-      }
-
-      $categoryNote = $this -> _noteLib -> getCategoryNote($params['category_id']);
-     
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => [
-         'category_note_list' => $categoryNote,
-        ],
-      ];
-    }
-
-    private function _handleDeleteNote(){
-      $raw = file_get_contents('php://input');
-      $body = json_decode($raw, true);
-
-      if(!$body['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $this -> _noteLib -> deleteNote($body['note_id']);
       return [
         'code' => 0,
         'message' => 'success'

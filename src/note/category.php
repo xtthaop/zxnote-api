@@ -48,7 +48,9 @@
       return [
         'code' => 0,
         'message' => 'success',
-        'data' => $categoryList,
+        'data' => [
+          'category_list' => $categoryList,
+        ],
       ];
     }
 

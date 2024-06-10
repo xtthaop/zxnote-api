@@ -49,7 +49,7 @@
     }
 
     public function getCategoryInfo($categoryId){
-      $sql = 'SELECT * FROM `note_category` WHERE `category_id`=:category_id';
+      $sql = 'SELECT * FROM `note_category` WHERE `deleted_at` IS NULL AND `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
