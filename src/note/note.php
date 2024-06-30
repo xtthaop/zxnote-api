@@ -171,6 +171,41 @@
       ];
     }
 
+    private function _handleGetNoteContent(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $content = $this -> _noteLib -> getNoteContent($params['note_id']);
+
+      if(!$content){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $content
+      ];
+    }
+
+    private function _handleSaveNote(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $this -> _noteLib -> saveNote($body['note_id'], $body['note_title'], $body['note_content']);
+      return [
+        'code' => 0,
+        'message' => 'success'
+      ];
+    }
+
     private function _handlePublishNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
@@ -326,41 +361,6 @@
         }
       }
 
-      return [
-        'code' => 0,
-        'message' => 'success'
-      ];
-    }
-
-    private function _handleGetNoteContent(){
-      $params = $_GET;
-
-      if(!$params['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $content = $this -> _noteLib -> getNoteContent($params['note_id']);
-
-      if(!$content){
-        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
-      }
-
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => $content
-      ];
-    }
-
-    private function _handleSaveNote(){
-      $raw = file_get_contents('php://input');
-      $body = json_decode($raw, true);
-
-      if(!$body['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $this -> _noteLib -> saveNote($body['note_id'], $body['note_title'], $body['note_content']);
       return [
         'code' => 0,
         'message' => 'success'

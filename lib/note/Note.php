@@ -66,6 +66,55 @@
       $stml -> execute();
     }
 
+    public function getNoteContent($noteId, $isDeleted = false){
+      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`, `status`
+              FROM `note` WHERE `note_id`=:note_id';
+
+      if($isDeleted){
+        $sql .= ' AND `deleted_at` IS NOT NULL';
+      }else{
+        $sql .= ' AND `deleted_at` IS NULL';
+      }
+
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
+    }
+
+    public function saveNote($noteId, $noteTitle, $noteContent, $saveHistory = true){
+      $selectSql = 'SELECT `status`, `category_id` FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($selectSql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      $oldStatus = $res['status'];
+      $categoryId = $res['category_id'];
+
+      $updateSql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content';
+      if($oldStatus === 1){
+        $updateSql .= ', `status`=2';
+      }
+      $updateSql .= ' WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($updateSql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> bindParam(':note_title', $noteTitle);
+      $stml -> bindParam(':note_content', $noteContent);
+      $stml -> execute();
+
+      if ($saveHistory) {
+        $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`, `category_id`)
+                       VALUES (:note_id, :note_title, :note_content, :category_id)';
+        $stml = $this -> _db -> prepare($historySql);
+        $stml -> bindParam(':note_id', $noteId);
+        $stml -> bindParam(':note_title', $noteTitle);
+        $stml -> bindParam(':note_content', $noteContent);
+        $stml -> bindParam(':category_id', $categoryId);
+        $stml -> execute();
+      }
+    }
+
     public function publishNote($noteId, $status){
       $currentTime = date('Y:m:d H:m:s');
 
@@ -136,55 +185,6 @@
       $stml -> execute();
       $res = $stml -> fetch(PDO::FETCH_ASSOC);
       return $res;
-    }
-
-    public function getNoteContent($noteId, $isDeleted = false){
-      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`, `status`
-              FROM `note` WHERE `note_id`=:note_id';
-
-      if($isDeleted){
-        $sql .= ' AND `deleted_at` IS NOT NULL';
-      }else{
-        $sql .= ' AND `deleted_at` IS NULL';
-      }
-
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
-      $content = $stml -> fetch(PDO::FETCH_ASSOC);
-      return $content;
-    }
-
-    public function saveNote($noteId, $noteTitle, $noteContent, $saveHistory = true){
-      $selectSql = 'SELECT `status`, `category_id` FROM `note` WHERE `note_id`=:note_id';
-      $stml = $this -> _db -> prepare($selectSql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
-      $res = $stml -> fetch(PDO::FETCH_ASSOC);
-      $oldStatus = $res['status'];
-      $categoryId = $res['category_id'];
-
-      $updateSql = 'UPDATE `note` SET `note_title`=:note_title, `note_content`=:note_content';
-      if($oldStatus === 1){
-        $updateSql .= ', `status`=2';
-      }
-      $updateSql .= ' WHERE `note_id`=:note_id';
-      $stml = $this -> _db -> prepare($updateSql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> bindParam(':note_title', $noteTitle);
-      $stml -> bindParam(':note_content', $noteContent);
-      $stml -> execute();
-
-      if ($saveHistory) {
-        $historySql = 'INSERT INTO `note_history` (`note_id`, `note_title`, `note_content`, `category_id`)
-                       VALUES (:note_id, :note_title, :note_content, :category_id)';
-        $stml = $this -> _db -> prepare($historySql);
-        $stml -> bindParam(':note_id', $noteId);
-        $stml -> bindParam(':note_title', $noteTitle);
-        $stml -> bindParam(':note_content', $noteContent);
-        $stml -> bindParam(':category_id', $categoryId);
-        $stml -> execute();
-      }
     }
 
     public function getNoteHistoryList($noteId){
