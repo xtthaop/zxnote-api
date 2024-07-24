@@ -66,7 +66,6 @@ class Upload {
     list($width, $height) = getimagesize($file);
     $maxWidth = 720;
 
-    // 需要统一处理一下所有已上传的图片时将下面这行注释掉
     if($width <= $maxWidth) return;
 
     $r = $height / $width;

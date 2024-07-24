@@ -9,7 +9,7 @@
 
     // 后台
     public function addNote($title, $categoryId){
-      $sql = 'INSERT INTO `note` (`note_title`, `category_id`) VALUES (:note_title, :category_id)';
+      $sql = 'INSERT INTO `note` (`note_title`, `note_content`, `category_id`) VALUES (:note_title, "", :category_id)';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_title', $title);
       $stml -> bindParam(':category_id', $categoryId);
@@ -66,8 +66,8 @@
       $stml -> execute();
     }
 
-    public function getNoteContent($noteId, $isDeleted = false){
-      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `create_time`, `status`
+    public function getNote($noteId, $isDeleted = false){
+      $sql = 'SELECT `note_id`, `note_title`, `note_content`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
 
       if($isDeleted){

@@ -49,8 +49,8 @@
             // 后台
             case 'get_category_note':
               return $this -> _handleGetCategoryNote();
-            case 'get_note_content':
-              return $this -> _handleGetNoteContent();
+            case 'get_note':
+              return $this -> _handleGetNote();
             case 'get_note_history_list':
               return $this -> _handleGetNoteHistoryList();
             case 'get_note_history_version':
@@ -171,14 +171,14 @@
       ];
     }
 
-    private function _handleGetNoteContent(){
+    private function _handleGetNote(){
       $params = $_GET;
 
       if(!$params['note_id']){
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $content = $this -> _noteLib -> getNoteContent($params['note_id']);
+      $content = $this -> _noteLib -> getNote($params['note_id']);
 
       if(!$content){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
