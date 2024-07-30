@@ -245,6 +245,7 @@
         'message' => 'success',
         'data' => [
          'note_history_list' => $res,
+         'category_id' => $note['category_id']
         ],
       ];
     }

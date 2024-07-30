@@ -66,6 +66,16 @@
       $stml -> execute();
     }
 
+    public function getNoteBasicInfo($noteId){
+      $sql = 'SELECT `note_id`, `category_id`, `create_time`, `status`
+              FROM `note` WHERE `note_id`=:note_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
+    }
+
     public function getNote($noteId, $isDeleted = false){
       $sql = 'SELECT `note_id`, `note_title`, `note_content`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
@@ -147,6 +157,24 @@
       $stml -> execute($arr);
     }
 
+    public function getNoteHistoryList($noteId){
+      $sql = 'SELECT `id`, `create_time` FROM `note_history` WHERE `note_id`=:note_id ORDER BY create_time DESC';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':note_id', $noteId);
+      $stml -> execute();
+      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $result;
+    }
+
+    public function getNoteHistoryVersion($id){
+      $sql = 'SELECT * FROM `note_history` WHERE `id`=:id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':id', $id);
+      $stml -> execute();
+      $res = $stml -> fetch(PDO::FETCH_ASSOC);
+      return $res;
+    }
+
     public function completelyDeleteNote($noteId = false){
       $array = array();
       $sql = 'DELETE FROM `note` WHERE `deleted_at` IS NOT NULL';
@@ -175,34 +203,6 @@
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
-    }
-
-    public function getNoteBasicInfo($noteId){
-      $sql = 'SELECT `note_id`, `category_id`, `create_time`, `status`
-              FROM `note` WHERE `note_id`=:note_id';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
-      $res = $stml -> fetch(PDO::FETCH_ASSOC);
-      return $res;
-    }
-
-    public function getNoteHistoryList($noteId){
-      $sql = 'SELECT `id`, `create_time` FROM `note_history` WHERE `note_id`=:note_id ORDER BY create_time DESC';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':note_id', $noteId);
-      $stml -> execute();
-      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
-      return $result;
-    }
-
-    public function getNoteHistoryVersion($id){
-      $sql = 'SELECT * FROM `note_history` WHERE `id`=:id';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':id', $id);
-      $stml -> execute();
-      $res = $stml -> fetch(PDO::FETCH_ASSOC);
-      return $res;
     }
 
     public function deleteNoteHistory($time){
