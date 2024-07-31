@@ -175,6 +175,37 @@
       return $res;
     }
 
+    public function getAllNoteContent(){
+      $sql = 'SELECT `note_content` FROM `note` UNION ALL SELECT `note_content` FROM `note_history`';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute();
+      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
+      return $result;
+    }
+
+    public function completelyDeleteNoteHistory($time){
+      $currentTimestamp = time();
+      $daysToSubtract;
+      if($time === 1){
+        $daysToSubtract = 7 * 24 * 3600;
+      }else if($time === 2){
+        $daysToSubtract = 30 * 24 * 3600;
+      }
+
+      $arr = array();
+      $sql = 'DELETE FROM `note_history`';
+
+      if($time !== 3){
+        $time = date('Y:m:d H:m:s', $currentTimestamp - $daysToSubtract);
+        $sql .= ' WHERE `create_time`<=:time';
+        $array[':time'] = $time;
+      }
+      
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> execute($array);
+      return $stml -> rowCount();
+    }
+
     public function completelyDeleteNote($noteId = false){
       $array = array();
       $sql = 'DELETE FROM `note` WHERE `deleted_at` IS NOT NULL';
@@ -203,37 +234,6 @@
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();
-    }
-
-    public function deleteNoteHistory($time){
-      $currentTimestamp = time();
-      $daysToSubtract;
-      if($time === 1){
-        $daysToSubtract = 7 * 24 * 3600;
-      }else if($time === 2){
-        $daysToSubtract = 30 * 24 * 3600;
-      }
-
-      $arr = array();
-      $sql = 'DELETE FROM `note_history`';
-
-      if($time !== 3){
-        $time = date('Y:m:d H:m:s', $currentTimestamp - $daysToSubtract);
-        $sql .= ' WHERE `create_time`<=:time';
-        $array[':time'] = $time;
-      }
-      
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> execute($array);
-      return $stml -> rowCount();
-    }
-
-    public function getAllNoteContent(){
-      $sql = 'SELECT `note_content` FROM `note` UNION ALL SELECT `note_content` FROM `note_history`';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> execute();
-      $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
-      return $result;
     }
     
     public function getDeletedNoteList(){

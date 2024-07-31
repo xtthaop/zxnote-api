@@ -55,7 +55,7 @@
               return $this -> _handleGetNoteHistoryList();
             case 'get_note_history_version':
               return $this -> _handleGetNoteHistoryVersion();
-            case 'get_files_info':
+            case 'get_note_files_info':
               return $this -> _handleNoteFiles(false);
             case 'get_deleted_note_list':
               return $this -> _handleGetDeletedNoteList();
@@ -77,10 +77,10 @@
           switch($params[2]){
             case 'soft_delete_note':
               return $this -> _handleSoftDeleteNote();
-            case 'completely_delete_note':
-              return $this -> _handleCompletelyDeleteNote();
             case 'clear_space':
               return $this -> _handleClearSpace();
+            case 'completely_delete_note':
+              return $this -> _handleCompletelyDeleteNote();
             default:
               throw new Exception('请求的资源不存在', 404);
           }
@@ -300,6 +300,189 @@
       ];
     }
 
+    private function _handleNoteFiles($isDelete){
+      $re = '/\!\[.*\]\((\S+) *\n? *\S* *\n? *\)|\[.+\]: *\n? *(\S+) *\n? *\S*/';
+      $backupDir = "./uploads_clear_backup/images";
+      if(!is_dir($backupDir)){
+        mkdir($backupDir, 0777, true);
+      }
+      $imgPath = '/uploads/images';
+      $imgDir = ".$imgPath";
+      if(!is_dir($imgDir)){
+        mkdir($imgDir, 0777, true);
+      }
+      $noteList = $this -> _noteLib -> getAllNoteContent();
+  
+      $referImgsNum = 0;
+      $referImgsList = [];
+  
+      foreach($noteList as $noteKey => $note){
+        if(preg_match_all($re, $note['note_content'], $matches)){
+          $matchesArr = array_unique(array_merge($matches[1], $matches[2]));
+  
+          foreach($matchesArr as $matchKey => $matchValue){
+            if($matchValue){
+              $position = strpos($matchValue, $imgPath);
+              if($position !== false){
+                $suffix = explode('.', $matchValue)[1];
+                $path = preg_replace('/^https?:\/\/.*\/restful|^\/restful/', '', $matchValue);
+                if(!in_array($path, $referImgsList)){
+                  $referImgsList[] = $path;
+                  $referImgsList[] = str_replace(".$suffix", "_low_ratio.$suffix", $path);
+                  $referImgsNum += 2;
+                }
+              }
+            }
+          }
+        }
+      }
+  
+      $existingImgsList = $this -> _getDirFileList($imgDir);
+      $existingImgsNum = count($existingImgsList);
+      $existingImgsSize = 0;
+  
+      $confirmedImgsNum = 0;
+      $confirmedImgsList = [];
+  
+      $deletedImgsNum = 0;
+      $deletedImgsList = [];
+      $deletedImgsSize = 0;
+  
+      foreach($existingImgsList as $key => $value){
+        $flag = true;
+        $existingImgsSize += filesize($value);
+  
+        foreach($referImgsList as $matcheKey => $matcheValue){
+          if(substr_count(".$matcheValue", $value)){
+            $confirmedImgsNum++;
+            $confirmedImgsList[] = $value;
+            $flag = false;
+            break;
+          }
+        }
+  
+        if($flag){
+          $deletedImgsNum++;
+          $deletedImgsList[] = $value;
+          $deletedImgsSize += filesize($value);
+  
+          if($isDelete){
+            $tempArr = explode('/', $value);
+            $fileName = $tempArr[count($tempArr) - 1];
+            if(copy($value, "$backupDir/$fileName")){
+              unlink($value);
+            }
+          }
+        }
+      }
+
+      $data;
+      if($isDelete){
+        $data = [
+          'num' => $deletedImgsNum,
+          'size' => $deletedImgsSize,
+        ];
+      }else{
+        $data = [
+          'refer' => [
+            'num' => $referImgsNum,
+            'list' => $referImgsList,
+            'desc' => '笔记已引用的图片',
+          ],
+          'existing' => [
+            'num' => $existingImgsNum,
+            'list' => $existingImgsList,
+            'size' => $existingImgsSize,
+            'desc' => '现存所有的图片',
+          ],
+          'confirmed' => [
+            'num' => $confirmedImgsNum,
+            'list' => $confirmedImgsList,
+            'desc' => '现存被笔记引用的图片',
+          ],
+          'deleted' => [
+            'num' => $deletedImgsNum,
+            'list' => $deletedImgsList,
+            'size' => $deletedImgsSize,
+            'desc' => '需要删除的图片',
+          ],
+        ];
+      }
+  
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $data,
+      ];
+    }
+
+    private function _getDirFileList($directory){
+      static $array = [];
+  
+      $dir = dir($directory);
+      while($file = $dir -> read()){
+        if(is_dir("$directory/$file") && $file !== '.' && $file !== '..' && $file !== '.DS_Store'){
+          $this -> _getDirFileList("$directory/$file");
+        }else{
+          if($file !== '.' && $file !== '..' && $file !== '.DS_Store'){
+            $array[] = "$directory/$file";
+          }
+        }
+      }
+  
+      return $array;
+    }
+
+    private function _handleClearSpace(){
+      $raw = file_get_contents('php://input');
+      $body = json_decode($raw, true);
+
+      if(!$body['checked']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $deletedHistoryNotesNum = 0;
+      $softDeletedImgsNum = 0;
+      $softDeletedImgsSize = 0;
+      $deletedNotesNum = 0;
+      $deletedImgsNum = 0;
+      $deletedImgsSize = 0;
+
+      if(in_array('history', $body['checked'])){
+        if(!$body['time']){
+          throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+        }
+
+        $deletedHistoryNotesNum = $this -> _noteLib -> completelyDeleteNoteHistory($body['time']);
+      }
+
+      if(in_array('img', $body['checked'])){
+        $res = $this -> _handleNoteFiles(true);
+        $softDeletedImgsNum = $res['data']['num'];
+        $softDeletedImgsSize = $res['data']['size'];
+      }
+
+      if(in_array('recycle', $body['checked'])){
+        $deletedNotesNum = $this -> _noteLib -> completelyDeleteNote();
+        $res = $this -> _noteImg -> handleDeleteAllBackupImg();
+        $deletedImgsNum = $res['data']['num'];
+        $deletedImgsSize = $res['data']['size'];
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'deleted_history_notes_num' => $deletedHistoryNotesNum,
+          'soft_deleted_imgs_num' => $softDeletedImgsNum,
+          'soft_deleted_imgs_size' => $softDeletedImgsSize,
+          'deleted_notes_num' => $deletedNotesNum,
+          'deleted_imgs_num' => $deletedImgsNum,
+          'deleted_imgs_size' => $deletedImgsSize,
+        ],
+      ];
+    }
+
     private function _handleRestoreNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
@@ -366,192 +549,6 @@
         'code' => 0,
         'message' => 'success'
       ];
-    }
-
-    private function _handleNoteFiles($isDelete){
-      $re = '/\!\[.*?\]\((\S*) ?\S*\)|\[.*?\]: *\n?(\S*) ?\S*/';
-      $backupDir = "./uploads_clear_backup/images";
-      if(!is_dir($backupDir)){
-        mkdir($backupDir, 0777, true);
-      }
-      $imgDir = '/uploads/images';
-      $noteList = $this -> _noteLib -> getAllNoteContent();
-  
-      $referImgsNum = 0;
-      $referImgsList = [];
-  
-      foreach($noteList as $noteKey => $note){
-        if(preg_match_all($re, $note['note_content'], $matches)){
-          $matchesArr = array_unique(array_merge($matches[1], $matches[2]));
-  
-          foreach($matchesArr as $matchKey => $matchValue){
-            if($matchValue){
-              $suffix = explode('.', $matchValue)[1];
-              $path = preg_replace('/^https?:\/\/.*\/restful|^\/restful/', '', $matchValue);
-              
-              $position = strpos($matchValue, $imgDir);
-              if($position !== false){
-                if(!in_array($path, $referImgsList)){
-                  $referImgsList[] = $path;
-                  $referImgsList[] = str_replace(".$suffix", "_low_ratio.$suffix", $path);
-                  $referImgsNum += 2;
-                }
-              }
-            }
-          }
-        }
-      }
-  
-      $existingImgsList = $this -> _getDirFileList(".$imgDir");
-      $existingImgsNum = count($existingImgsList);
-      $existingImgsSize = 0;
-  
-      $confirmedImgsNum = 0;
-      $confirmedImgsList = [];
-  
-      $deletedImgsNum = 0;
-      $deletedImgsList = [];
-      $deletedImgsSize = 0;
-  
-      foreach($existingImgsList as $key => $value){
-        $flag = true;
-        $existingImgsSize += filesize($value);
-  
-        foreach($referImgsList as $matcheKey => $matcheValue){
-          if(substr_count(".$matcheValue", $value)){
-            $confirmedImgsNum++;
-            $confirmedImgsList[] = $value;
-            $flag = false;
-            break;
-          }
-        }
-  
-        if($flag){
-          $deletedImgsNum++;
-          $deletedImgsList[] = $value;
-          $deletedImgsSize += filesize($value);
-  
-          if($isDelete){
-            $tempArr = explode('/', $value);
-            $fileName = $tempArr[count($tempArr) - 1];
-            if(copy($value, "$backupDir/$fileName")){
-              unlink($value);
-            }
-          }
-        }else{
-          // 需要统一处理一下所有已上传的图片时将这里的注释打开
-          // if(!preg_match('/_low_ratio.+$/', $value)){
-          //   $this -> _upload -> limitPictureSize($value);
-          //   $this -> _upload -> generateLowRatioPicture($value);
-          // }
-        }
-      }
-
-      $data;
-      if($isDelete){
-        $data = [
-          'num' => $deletedImgsNum,
-          'size' => $deletedImgsSize,
-        ];
-      }else{
-        $data = [
-          'refer' => [
-            'num' => $referImgsNum,
-            'list' => $referImgsList,
-            'desc' => '笔记已引用的图片',
-          ],
-          'existing' => [
-            'num' => $existingImgsNum,
-            'list' => $existingImgsList,
-            'size' => $existingImgsSize,
-            'desc' => '现存所有的图片',
-          ],
-          'confirmed' => [
-            'num' => $confirmedImgsNum,
-            'list' => $confirmedImgsList,
-            'desc' => '现存被笔记引用的图片',
-          ],
-          'deleted' => [
-            'num' => $deletedImgsNum,
-            'list' => $deletedImgsList,
-            'size' => $deletedImgsSize,
-            'desc' => '需要删除的图片',
-          ],
-        ];
-      }
-  
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => $data,
-      ];
-    }
-
-    private function _handleClearSpace(){
-      $raw = file_get_contents('php://input');
-      $body = json_decode($raw, true);
-
-      if(!$body['checked']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $deletedHistoryNotesNum = 0;
-      $softDeletedImgsNum = 0;
-      $softDeletedImgsSize = 0;
-      $deletedNotesNum = 0;
-      $deletedImgsNum = 0;
-      $deletedImgsSize = 0;
-
-      if(in_array('history', $body['checked'])){
-        if(!$body['time']){
-          throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-        }
-
-        $deletedHistoryNotesNum = $this -> _noteLib -> deleteNoteHistory($body['time']);
-      }
-
-      if(in_array('img', $body['checked'])){
-        $res = $this -> _handleNoteFiles(true);
-        $softDeletedImgsNum = $res['data']['num'];
-        $softDeletedImgsSize = $res['data']['size'];
-      }
-
-      if(in_array('recycle', $body['checked'])){
-        $deletedNotesNum = $this -> _noteLib -> completelyDeleteNote();
-        $res = $this -> _noteImg -> handleDeleteAllBackupImg();
-        $deletedImgsNum = $res['data']['num'];
-        $deletedImgsSize = $res['data']['size'];
-      }
-
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => [
-          'deleted_history_notes_num' => $deletedHistoryNotesNum,
-          'soft_deleted_imgs_num' => $softDeletedImgsNum,
-          'soft_deleted_imgs_size' => $softDeletedImgsSize,
-          'deleted_notes_num' => $deletedNotesNum,
-          'deleted_imgs_num' => $deletedImgsNum,
-          'deleted_imgs_size' => $deletedImgsSize,
-        ],
-      ];
-    }
-  
-    private function _getDirFileList($directory){
-      static $array = [];
-  
-      $dir = dir($directory);
-      while($file = $dir -> read()){
-        if(is_dir("$directory/$file") && $file !== '.' && $file !== '..' && $file !== '.DS_Store'){
-          $this -> _getDirFileList("$directory/$file");
-        }else{
-          if($file !== '.' && $file !== '..' && $file !== '.DS_Store'){
-            $array[] = "$directory/$file";
-          }
-        }
-      }
-  
-      return $array;
     }
 
     private function _handleGetDeletedNoteList(){
