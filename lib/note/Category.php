@@ -48,8 +48,13 @@
       $stml -> execute();
     }
 
-    public function getCategoryInfo($categoryId){
-      $sql = 'SELECT * FROM `note_category` WHERE `deleted_at` IS NULL AND `category_id`=:category_id';
+    public function getCategoryInfo($categoryId, $isDeleted = false){
+      $sql = 'SELECT * FROM `note_category` WHERE `category_id`=:category_id';
+
+      if(!$isDeleted){
+        $sql .= ' AND `deleted_at` IS NULL';
+      }
+
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
       $stml -> execute();

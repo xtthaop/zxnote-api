@@ -58,6 +58,22 @@
       $stml -> execute();
     }
 
+    public function softDeleteCategoryAllNote($categoryId){
+      $currentTime = date('Y:m:d H:m:s');
+      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
+              `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
+              WHERE `category_id`=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> bindParam(':deleted_at', $currentTime);
+      $stml -> execute();
+
+      $sql = 'DELETE FROM `note_history` WHERE category_id=:category_id';
+      $stml = $this -> _db -> prepare($sql);
+      $stml -> bindParam(':category_id', $categoryId);
+      $stml -> execute();
+    }
+
     public function moveNote($categoryId, $noteId){
       $sql = 'UPDATE `note` SET `category_id`=:category_id WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($sql);
@@ -66,9 +82,14 @@
       $stml -> execute();
     }
 
-    public function getNoteBasicInfo($noteId){
+    public function getNoteBasicInfo($noteId, $isDeleted = false){
       $sql = 'SELECT `note_id`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
+
+      if(!$isDeleted){
+        $sql .= ' AND `deleted_at` IS NULL';
+      }
+
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':note_id', $noteId);
       $stml -> execute();
@@ -80,9 +101,7 @@
       $sql = 'SELECT `note_id`, `note_title`, `note_content`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
 
-      if($isDeleted){
-        $sql .= ' AND `deleted_at` IS NOT NULL';
-      }else{
+      if(!$isDeleted){
         $sql .= ' AND `deleted_at` IS NULL';
       }
 
@@ -219,23 +238,7 @@
       $stml -> execute($array);
       return $stml -> rowCount();
     }
-    
-    public function softDeleteCategoryAllNote($categoryId){
-      $currentTime = date('Y:m:d H:m:s');
-      $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
-              `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
-              WHERE `category_id`=:category_id';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':category_id', $categoryId);
-      $stml -> bindParam(':deleted_at', $currentTime);
-      $stml -> execute();
 
-      $sql = 'DELETE FROM `note_history` WHERE category_id=:category_id';
-      $stml = $this -> _db -> prepare($sql);
-      $stml -> bindParam(':category_id', $categoryId);
-      $stml -> execute();
-    }
-    
     public function getDeletedNoteList(){
       $sql = 'SELECT `note_id`, `note_title`, `create_time`, `status`, `category_id` FROM `note`
               WHERE `deleted_at` IS NOT NULL ORDER BY deleted_at DESC';

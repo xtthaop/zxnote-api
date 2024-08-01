@@ -483,6 +483,37 @@
       ];
     }
 
+    private function _handleGetDeletedNoteList(){
+      $noteList = $this -> _noteLib -> getDeletedNoteList();
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => [
+          'note_list' => $noteList,
+        ],
+      ];
+    }
+
+    private function _handleGetDeletedNoteContent(){
+      $params = $_GET;
+
+      if(!$params['note_id']){
+        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
+      }
+
+      $res = $this -> _noteLib -> getNote($params['note_id'], true);
+
+      if(!$res){
+        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
+      }
+
+      return [
+        'code' => 0,
+        'message' => 'success',
+        'data' => $res
+      ];
+    }
+
     private function _handleRestoreNote(){
       $raw = file_get_contents('php://input');
       $body = json_decode($raw, true);
@@ -491,13 +522,13 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id']);
+      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id'], true);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
       }
 
-      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id']);
+      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id'], true);
 
       if(!$category){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -528,7 +559,7 @@
         throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
       }
 
-      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id']);
+      $note = $this -> _noteLib -> getNoteBasicInfo($body['note_id'], true);
 
       if(!$note){
         throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
@@ -536,7 +567,7 @@
 
       $this -> _noteLib -> completelyDeleteNote($body['note_id']);
 
-      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id']);
+      $category = $this -> _categoryLib -> getCategoryInfo($note['category_id'], true);
 
       if($category){
         $categoryNote = $this -> _noteLib -> getCategoryNote($note['category_id']);
@@ -548,37 +579,6 @@
       return [
         'code' => 0,
         'message' => 'success'
-      ];
-    }
-
-    private function _handleGetDeletedNoteList(){
-      $noteList = $this -> _noteLib -> getDeletedNoteList();
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => [
-          'note_list' => $noteList,
-        ],
-      ];
-    }
-
-    private function _handleGetDeletedNoteContent(){
-      $params = $_GET;
-
-      if(!$params['note_id']){
-        throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
-      }
-
-      $res = $this -> _noteLib -> getNoteContent($params['note_id'], true);
-
-      if(!$res){
-        throw new Exception('记录不存在', ErrorCode::RECORD_NOT_FOUND);
-      }
-
-      return [
-        'code' => 0,
-        'message' => 'success',
-        'data' => $res
       ];
     }
     
