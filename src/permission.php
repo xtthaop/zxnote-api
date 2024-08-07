@@ -82,7 +82,6 @@ class Permission {
     }
 
     $password = $this -> _jwt -> md5Password($body['password']);
-    // var_dump($password);
     $res = $this -> _permission -> login($body['username'], $password);
 
     if(!empty($res)){
