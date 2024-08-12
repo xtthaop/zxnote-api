@@ -7,11 +7,10 @@ class PermissionLib {
     $this -> _db = $db;
   }
 
-  public function login($username, $password){
-    $sql = 'SELECT `user_id` as `uid`, `username` as `unm` FROM `user` WHERE `username`=:username AND `password`=:password';
+  public function login($username){
+    $sql = 'SELECT `user_id` as `uid`, `username` as `unm`, `password` FROM `user` WHERE `username`=:username';
     $stmt = $this -> _db -> prepare($sql);
     $stmt -> bindParam(':username', $username);
-    $stmt -> bindParam(':password', $password);
     $stmt -> execute();
     $res = $stmt -> fetch(PDO::FETCH_ASSOC);
     return $res;
@@ -26,11 +25,10 @@ class PermissionLib {
     return $res;
   }
 
-  public function verifyOldPassword($userId, $oldPassword){
-    $sql = 'SELECT `user_id`, `username` FROM `user` WHERE `user_id`=:user_id AND `password`=:password';
+  public function getPasswordByUserId($userId){
+    $sql = 'SELECT `password` FROM `user` WHERE `user_id`=:user_id';
     $stml = $this -> _db -> prepare($sql);
     $stml -> bindParam(':user_id', $userId);
-    $stml -> bindParam(':password', $oldPassword);
     $stml -> execute();
     $result = $stml -> fetch(PDO::FETCH_ASSOC);
     return $result;

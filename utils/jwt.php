@@ -97,8 +97,12 @@ class JwtAuth {
     return base64_decode(strtr($input, '-_', '+/'));
   }
 
-  public function md5Password($string, $key = 'ZxNo@te!19@96#'){
-    return md5($string . $key);
+  public function hashPassword($password){
+    return password_hash($password, PASSWORD_DEFAULT);
+  }
+
+  public function verifyPassword($password, $storedHash){
+    return password_verify($password, $storedHash);
   }
 
   public function addTokenToBlack($token) {

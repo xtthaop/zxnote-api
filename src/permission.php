@@ -81,10 +81,13 @@ class Permission {
       throw new Exception("密码不能为空", ErrorCode::PASSWOED_CANNOT_EMPTY);
     }
 
-    $password = $this -> _jwt -> md5Password($body['password']);
-    $res = $this -> _permission -> login($body['username'], $password);
+    $res = $this -> _permission -> login($body['username']);
 
-    if(!empty($res)){
+    if(empty($res)){
+      $this -> _handleLoginFailed();
+    }
+
+    if($this -> _jwt -> verifyPassword($body['password'], $res['password'])){
       $payload = $this -> _jwt -> generatePayload($res);
       $token = $this -> _jwt -> getToken($payload);
 
@@ -96,10 +99,14 @@ class Permission {
         ],
       ];
     }else{
-      // 重置验证码否则拿到这个验证码可不受验证限制不断重试密码
-      $_SESSION['captcha_x'] = mt_rand(0, $_SESSION['captcha_x'] - 10);
-      throw new Exception("用户名与密码不匹配", ErrorCode::USER_VERIFY_FAILED);
+      $this -> _handleLoginFailed();
     }
+  }
+
+  private function _handleLoginFailed() {
+    // 重置验证码否则拿到这个验证码可不受验证限制不断重试密码
+    $_SESSION['captcha_x'] = mt_rand(0, $_SESSION['captcha_x'] - 10);
+    throw new Exception("用户名与密码不匹配", ErrorCode::USER_VERIFY_FAILED);
   }
 
   private function _handleGetUserInfo(){
@@ -131,11 +138,10 @@ class Permission {
       throw new Exception('参数错误', ErrorCode::INVALID_PARAMS);
     }
 
-    $oldPassword = $this -> _jwt -> md5Password($body['old_password']);
-    $res = $this -> _permission -> verifyOldPassword($gUserId, $oldPassword);
+    $res = $this -> _permission -> getPasswordByUserId($gUserId);
 
-    if(!empty($res)){
-      $body['new_password'] = $this -> _jwt -> md5Password($body['new_password']);
+    if(!empty($res) && $this -> _jwt -> verifyPassword($body['old_password'], $res['password'])){
+      $body['new_password'] = $this -> _jwt -> hashPassword($body['new_password']);
       $this -> _permission -> changePassword($gUserId, $body);
     }else{
       throw new Exception('旧密码验证失败', ErrorCode::OLD_PASSWORD_VERIFY_FAILED);
