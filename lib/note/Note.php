@@ -43,7 +43,7 @@
     }
 
     public function softDeleteNote($noteId){
-      $currentTime = date('Y:m:d H:m:s');
+      $currentTime = date('Y:m:d H:i:s');
       $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
               `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
               WHERE `note_id`=:note_id';
@@ -59,7 +59,7 @@
     }
 
     public function softDeleteCategoryAllNote($categoryId){
-      $currentTime = date('Y:m:d H:m:s');
+      $currentTime = date('Y:m:d H:i:s');
       $sql = 'UPDATE `note` SET `deleted_at`=:deleted_at, `publish_note_title`=null,
               `publish_note_content`=null, `publish_update_time`=null, `publish_time`=null, `status`=0
               WHERE `category_id`=:category_id';
@@ -145,7 +145,7 @@
     }
 
     public function publishNote($noteId, $status){
-      $currentTime = date('Y:m:d H:m:s');
+      $currentTime = date('Y:m:d H:i:s');
 
       $selectSql = 'SELECT `status` FROM `note` WHERE `note_id`=:note_id';
       $stml = $this -> _db -> prepare($selectSql);
@@ -215,7 +215,7 @@
       $sql = 'DELETE FROM `note_history`';
 
       if($time !== 3){
-        $time = date('Y:m:d H:m:s', $currentTimestamp - $daysToSubtract);
+        $time = date('Y:m:d H:i:s', $currentTimestamp - $daysToSubtract);
         $sql .= ' WHERE `create_time`<=:time';
         $array[':time'] = $time;
       }

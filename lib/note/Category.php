@@ -25,7 +25,7 @@
     }
 
     public function softDeleteCategory($categoryId){
-      $currentTime = date('Y:m:d H:m:s');
+      $currentTime = date('Y:m:d H:i:s');
       $sql = 'UPDATE `note_category` SET `deleted_at`=:deleted_at WHERE `category_id`=:category_id';
       $stml = $this -> _db -> prepare($sql);
       $stml -> bindParam(':category_id', $categoryId);
