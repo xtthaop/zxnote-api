@@ -16,8 +16,16 @@
       return $this -> _db -> lastInsertId();
     }
 
-    public function getCategoryList(){
-      $sql = 'SELECT `category_id`, `category_name` FROM `note_category` WHERE `deleted_at` IS NULL ORDER BY `create_time` DESC';
+    public function getCategoryList($onlyDeleted = false){
+      $sql = 'SELECT `category_id`, `category_name` FROM `note_category` WHERE';
+
+      if(!$onlyDeleted){
+        $sql .= ' `deleted_at` IS NULL';
+        $sql .= ' ORDER BY `create_time` DESC';
+      }else{
+        $sql .= ' `deleted_at` IS NOT NULL';
+      }
+
       $stml = $this -> _db -> prepare($sql);
       $stml -> execute();
       $res = $stml -> fetchAll(PDO::FETCH_ASSOC);
@@ -48,10 +56,10 @@
       $stml -> execute();
     }
 
-    public function getCategoryInfo($categoryId, $isDeleted = false){
+    public function getCategoryInfo($categoryId, $includeDeleted = false){
       $sql = 'SELECT * FROM `note_category` WHERE `category_id`=:category_id';
 
-      if(!$isDeleted){
+      if(!$includeDeleted){
         $sql .= ' AND `deleted_at` IS NULL';
       }
 

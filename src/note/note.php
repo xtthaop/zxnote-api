@@ -464,6 +464,10 @@
 
       if(in_array('recycle', $body['checked'])){
         $deletedNotesNum = $this -> _noteLib -> completelyDeleteNote();
+        $categories = $this -> _categoryLib -> getCategoryList(true);
+        foreach($categories as $key => $category){
+          $this -> _categoryLib -> completelyDeleteCategory($category['category_id']);
+        }
         $res = $this -> _noteImg -> handleDeleteAllBackupImg();
         $deletedImgsNum = $res['data']['num'];
         $deletedImgsSize = $res['data']['size'];

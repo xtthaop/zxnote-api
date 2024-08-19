@@ -82,11 +82,11 @@
       $stml -> execute();
     }
 
-    public function getNoteBasicInfo($noteId, $isDeleted = false){
+    public function getNoteBasicInfo($noteId, $includeDeleted = false){
       $sql = 'SELECT `note_id`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
 
-      if(!$isDeleted){
+      if(!$includeDeleted){
         $sql .= ' AND `deleted_at` IS NULL';
       }
 
@@ -97,11 +97,11 @@
       return $res;
     }
 
-    public function getNote($noteId, $isDeleted = false){
+    public function getNote($noteId, $includeDeleted = false){
       $sql = 'SELECT `note_id`, `note_title`, `note_content`, `category_id`, `create_time`, `status`
               FROM `note` WHERE `note_id`=:note_id';
 
-      if(!$isDeleted){
+      if(!$includeDeleted){
         $sql .= ' AND `deleted_at` IS NULL';
       }
 
@@ -274,15 +274,5 @@
       $result = $stml -> fetchAll(PDO::FETCH_ASSOC);
       return $result;
     }
-
-    // 调试
-    // public function updateNoteContentAndState($noteId, $noteContent) {
-    //   $sql = 'UPDATE `note` SET `note_content`=:note_content, `publish_note_content`=`note_content`,
-    //          `publish_update_status`=1 WHERE `note_id`=:note_id';
-    //   $stml = $this -> _db -> prepare($sql);
-    //   $stml -> bindParam(':note_id', $noteId);
-    //   $stml -> bindParam(':note_content', $noteContent);
-    //   $stml -> execute();
-    // }
   }
 
