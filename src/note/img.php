@@ -1,5 +1,11 @@
 <?php
   class NoteImg {
+    private $_upload;
+
+    public function __construct(Upload $upload){
+      $this -> _upload = $upload;
+    }
+
     public function handleNoteImg(){
       $requestMethod = $_SERVER['REQUEST_METHOD'];
       $path = $_SERVER['PATH_INFO'];
@@ -16,6 +22,8 @@
           switch($params[2]){
             case 'restore_note_img':
               return $this -> _handleRestoreOrDeleteImg();
+            case 'regenerate_img':
+              return $this -> _handleRegenerateImg();
             default:
               throw new Exception('请求的资源不存在', 404); 
           }
@@ -124,6 +132,23 @@
           'num' => count($backupImgs),
           'size' => $totalFileSize,
         ]
+      ];
+    }
+
+    private function _handleRegenerateImg(){
+      $existingDir = './uploads/images';
+      $backupDir = "./uploads_clear_backup/images";
+      $this -> _getDirFileList($existingDir);
+      $allImgs = $this -> _getDirFileList($backupDir);
+      foreach($allImgs as $img => $time){
+        if(!preg_match('/_low_ratio\.\w+$/', $img)){
+          $this -> _upload -> limitPictureSize($img, true);
+          $this -> _upload -> generateLowRatioPicture($img);
+        }
+      }
+      return [
+        'code' => 0,
+        'message' => 'success',
       ];
     }
   }

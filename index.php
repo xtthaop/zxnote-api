@@ -164,7 +164,7 @@
   $upload = new Upload();
   $permission = new Permission($permissionLib, $captcha, $jwt);
   $category = new Category($categoryLib, $noteLib);
-  $noteImg = new NoteImg();
+  $noteImg = new NoteImg($upload);
   $note = new Note($noteLib, $categoryLib, $wxsdk, $upload, $noteImg);
 
   $restful = new Restful($category, $note, $upload, $permission, $jwt, $noteImg);

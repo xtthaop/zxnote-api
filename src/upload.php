@@ -62,14 +62,19 @@ class Upload {
     }
   }
 
-  public function limitPictureSize($file) {
+  public function limitPictureSize($file, $regenerate = false) {
     list($width, $height) = getimagesize($file);
-    $maxWidth = 720;
 
-    if($width <= $maxWidth) return;
+    $maxWidth = 720;
+    $newWidth = $width;
+
+    if(!$regenerate && $width <= $maxWidth){
+      return;
+    }else{
+      if($width > $maxWidth) $newWidth = $maxWidth;
+    }
 
     $r = $height / $width;
-    $newWidth = $maxWidth;
     $newHeight = (int)round($newWidth * $r);
 
     if($newHeight < 1){
