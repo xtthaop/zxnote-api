@@ -64,8 +64,7 @@
             // 前台
             case 'get_published_note_list':
               return $this -> _handleGetPublishedNoteList();
-            // TODO: 接口名字修改
-            case 'get_note':
+            case 'get_published_note':
               return $this -> _handleGetPublishNote();
             case 'get_wx_config':
               return $this -> _handleGetWxConfig();

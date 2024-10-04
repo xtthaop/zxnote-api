@@ -39,7 +39,7 @@
       '/permission/login', 
       '/permission/get_captcha', 
       '/note/get_published_note_list', 
-      '/note/get_note', 
+      '/note/get_published_note', 
       '/note/get_wx_config',
     ];
 

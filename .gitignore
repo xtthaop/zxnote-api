@@ -5,3 +5,5 @@ uploads/*
 !uploads/.gitkeep
 uploads_clear_backup/*
 !uploads_clear_backup/.gitkeep
+wx_jsapi_ticket.php
+wx_access_token.php
