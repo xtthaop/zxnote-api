@@ -78,13 +78,33 @@ chmod 777 ./uploads
 chmod 777 ./uploads_clear_backup
 ```
 
-**启动 apache 服务**  
-记得启动服务之前修改 apache 服务配置
+**启动服务**  
+记得启动服务之前修改 apache 服务配置，参考如下：
+```
+Listen 8888
+
+<VirtualHost *:8888>
+    DocumentRoot "/var/www/zxnote/zxnote-api"
+    <Directory "/var/www/zxnote/zxnote-api">
+      AllowOverride All
+    </Directory>
+    ErrorLog "${APACHE_LOG_DIR}/zxnote/zxnote-api-error.log"
+    CustomLog "${APACHE_LOG_DIR}/zxnote/zxnote-api-access.log" combined
+</VirtualHost>
+```
+启动服务：
 ```
 /etc/init.d/apache2 start
 ```
 
-### 自动清除黑名单过期令牌
+**启动前端服务**
+
+开源前端：[zxnote-web](https://github.com/xtthaop/zxnote-web)  
+
+初始账号：admin  
+初始密码：111111
+
+### 自动清理令牌黑名单过期令牌
 执行 `crontab -e` 写入：
 ```
 0 6 * * * bash ......zxnote-api/assets/bash/zxnote-clear-expired-token.sh > /dev/null 2>&1 &

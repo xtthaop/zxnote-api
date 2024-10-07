@@ -66,7 +66,7 @@
       static $array = [];
   
       $dir = dir($directory);
-      while($file = $dir -> read()){
+      while($dir && $file = $dir -> read()){
         if(is_dir("$directory/$file") && $file !== '.' && $file !== '..' && $file !== '.DS_Store'){
           $this -> _getDirFileList("$directory/$file");
         }else{
