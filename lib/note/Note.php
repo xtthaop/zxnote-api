@@ -211,7 +211,7 @@
         $daysToSubtract = 30 * 24 * 3600;
       }
 
-      $arr = array();
+      $array = array();
       $sql = 'DELETE FROM `note_history`';
 
       if($time !== 3){
