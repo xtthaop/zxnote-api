@@ -46,6 +46,10 @@ class WXSDK {
   private function getJsApiTicket(){
     $data = json_decode($this -> get_php_file('wx_jsapi_ticket.php'));
 
+    if(!$data){
+      $data = json_decode('{"expire_time": 0, "jsapi_ticket": ""}');
+    }
+
     if($data -> expire_time < time()){
       $accessToken = $this -> getAccessToken();
       $url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?type=jsapi&access_token=$accessToken";
@@ -67,6 +71,10 @@ class WXSDK {
 
   private function getAccessToken(){
     $data = json_decode($this -> get_php_file('wx_access_token.php'));
+
+    if(!$data){
+      $data = json_decode('{"expire_time": 0, "access_token": ""}');
+    }
 
     if($data -> expire_time < time()){
       $url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$this->appId&secret=$this->appSecret";
@@ -99,7 +107,11 @@ class WXSDK {
   }
 
   private function get_php_file($filename){
-    return trim(substr(file_get_contents($filename), 15));
+    if(file_exists($filename)){
+      return trim(substr(file_get_contents($filename), 15));
+    }else{
+      return NULL;
+    }
   }
 
   private function set_php_file($filename, $content){
