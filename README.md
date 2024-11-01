@@ -21,7 +21,7 @@
 支持恢复笔记到某个历史版本，在回收站中找回笔记；  
 可配置所有数据每日定时备份至云端，最大程度避免数据丢失；  
 前后端代码全部开源并积极更新维护，[前端](https://github.com/xtthaop/zxnote-web)提供详细交互功能文档；  
-可组合[知行博客](https://github.com/xtthaop/zxnote-blog)开源项目搭建个人博客；   
+可组合[知行博客](https://github.com/xtthaop/zxblog-web)开源项目搭建个人博客；   
 ……
 
 ### 快速开始
@@ -133,7 +133,10 @@ bypy info
 ```
 
 ### 关于作者
-ZXNOTE 的作者是一名前端小学生，水平不高，文档或者代码中如有不当之处还请指正。
+
+知行笔记的作者是一名前端小学生，水平不高，文档或者代码中如有不当之处还请指正。
+
+联系我：chentao231205@163.com
 
 ### 成为赞助者
 <img src="https://github.com/xtthaop/image-lib/blob/master/comodo-admin/sponsor.png?raw=true" width="300px" />
