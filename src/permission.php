@@ -61,6 +61,14 @@ class Permission {
   private function _handleLogin(){
     $raw = file_get_contents('php://input');
     $body = json_decode($raw, true);
+
+    if(!$body['username']){
+      throw new Exception("用户名不能为空", ErrorCode::USERNAME_CANNOT_EMPTY);
+    }
+
+    if(!$body['password']){
+      throw new Exception("密码不能为空", ErrorCode::PASSWOED_CANNOT_EMPTY);
+    }
     
     $xMax = $_SESSION['captcha_x'] + 6;
     $xMin = $_SESSION['captcha_x'] - 6;
@@ -71,14 +79,6 @@ class Permission {
 
     if($body['x'] > $xMax || $body['x'] < $xMin){
       throw new Exception('拼图验证失败', ErrorCode::CAPTCHA_VERIFY_FAILED);
-    }
-
-    if(!$body['username']){
-      throw new Exception("用户名不能为空", ErrorCode::USERNAME_CANNOT_EMPTY);
-    }
-
-    if(!$body['password']){
-      throw new Exception("密码不能为空", ErrorCode::PASSWOED_CANNOT_EMPTY);
     }
 
     $res = $this -> _permission -> login($body['username']);
